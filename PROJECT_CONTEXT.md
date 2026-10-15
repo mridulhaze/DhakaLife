@@ -580,9 +580,9 @@ This file is the single source of truth for the project. Update it whenever:
 1. **Weather (Phase 1 Completed):**
    - Files: `lib/models/dhaka_life_models.dart`, `lib/services/dhaka_data_service.dart`, `lib/views/dhaka_weather_screen.dart`, `lib/views/dhaka_home_screen.dart`.
    - Implementation: Typed `DhakaWeatherData` model with Open-Meteo JSON factory, WMO code to Bangla mapping, 5s timeout, status 200 HTTP validation, memory caching, pull-to-refresh, error/retry states, and 5 unit tests (`test/weather_service_test.dart`). Verified on Genymotion Android 15.
-2. **Bangla News Ticker (Target: Phase 2):**
-   - No ticker currently implemented in upper dashboard.
-   - Proposed files: `lib/services/dhaka_news_service.dart`, `lib/models/dhaka_news_model.dart`, ticker widget in `lib/views/dhaka_home_screen.dart`.
+2. **Bangla News Ticker (Phase 2 Completed):**
+   - Files: `lib/models/dhaka_news_model.dart`, `lib/services/dhaka_news_service.dart`, `lib/widget/dhaka_news_ticker.dart`, `lib/views/dhaka_home_screen.dart`, `test/news_service_test.dart`.
+   - Implementation: Syndicated RSS headlines from BBC Bangla (`feeds.bbci.co.uk/bengali/rss.xml`) and The Daily Star Bangla (`bangla.thedailystar.net/rss.xml`). Clean horizontal ticker with red "সংবাদ" badge, source pill attribution, auto-scrolling headline rotation, in-browser authentic article viewing, 10-minute caching, duplicate filtering, offline fallback, and 4 unit tests. Verified on Genymotion Android 15.
 3. **Bangla Radio (Target: Phase 3):**
    - No audio playback dependencies or background services currently installed.
    - Android foreground service and lock-screen controls needed (`just_audio` / `audio_service`).
@@ -613,4 +613,43 @@ This file is the single source of truth for the project. Update it whenever:
     - Live service execution without throwing [PASS]
     - App smoke test [PASS]
 - **Emulator Verification:** Verified on Genymotion Android 15 (`192.168.246.103:5555`), capturing live temperature (29°C), sky condition, humidity, and wind stats.
+
+---
+
+## 27. Phase 2 — Bangla News Ticker Activation & Testing Records (October 15, 2026)
+
+### Implementation Summary
+- **Authorized News Sources:**
+  - BBC News বাংলা (Syndicated RSS 2.0: `https://feeds.bbci.co.uk/bengali/rss.xml`).
+  - The Daily Star Bangla (Syndicated RSS 2.0: `https://bangla.thedailystar.net/rss.xml`).
+  - Rejected scraping unapproved homepages or Cloudflare-protected feeds to respect copyright and terms of service.
+- **Typed Model (`DhakaNewsHeadline` in `lib/models/dhaka_news_model.dart`):**
+  - Fields: `title`, `link`, `source`, `pubDate`, `description`.
+  - JSON serialization/deserialization for future offline SQLite/Hive storage.
+- **News Service (`DhakaNewsService` in `lib/services/dhaka_news_service.dart`):**
+  - Direct RSS XML parser supporting CDATA blocks and standard XML elements (`<item>`, `<title>`, `<link>`, `<pubDate>`, `<description>`).
+  - Title and URL deduplication mechanism.
+  - 10-minute in-memory caching to eliminate redundant network requests.
+  - Curated emergency and civic fallback headlines if network is unreachable or offline.
+  - Safe external browser article launch (`url_launcher`) with `LaunchMode.externalApplication` to preserve publisher attribution and paywall integrity without scraping.
+- **UI Component (`DhakaNewsTicker` in `lib/widget/dhaka_news_ticker.dart`):**
+  - Positioned directly below the ambient sky horizon on `DhakaHomeScreen`.
+  - Prominent red "সংবাদ" badge with flash icon.
+  - Source pill chip (e.g. `[বিবিসি বাংলা]`, `[ডেইলি স্টার]`).
+  - Smooth 4-second auto-scrolling `PageView` headline rotator with horizontal swipe interaction.
+  - External link indicator icon (`Icons.open_in_new`).
+  - Single-frame lifecycle management cancelling timers on `dispose()`.
+- **Automated Testing Suite (`test/news_service_test.dart`):**
+  - 4/4 news unit tests passing:
+    - `DhakaNewsHeadline` JSON serialization [PASS]
+    - XML RSS parsing with CDATA blocks [PASS]
+    - Offline fallback headline generation [PASS]
+    - Service headline execution without throwing [PASS]
+  - Total project test suite: 10/10 tests passing.
+- **Emulator Verification:**
+  - Installed and verified on Genymotion Android 15 (`192.168.246.103:5555`).
+  - Successfully fetched live headlines from BBC News বাংলা (`screen_phase2_home.png`).
+  - Verified smooth headline transition (`screen_phase2_rotate.png`).
+  - Verified headline tap opens article in system browser (`screen_phase2_tap.png` & `screen_phase2_back2.png`).
+
 

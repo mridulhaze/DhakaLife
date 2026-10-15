@@ -15,6 +15,7 @@ import 'package:flutter_project_nutcm_1/views/drawer_screen.dart';
 import 'package:flutter_project_nutcm_1/views/nu_services_screen.dart';
 import 'package:flutter_project_nutcm_1/widget/bottomnavigationbar.dart';
 import 'package:flutter_project_nutcm_1/widget/service_icon.dart';
+import 'package:flutter_project_nutcm_1/widget/dhaka_news_ticker.dart';
 
 class DhakaHomeScreen extends StatefulWidget {
   const DhakaHomeScreen({Key? key}) : super(key: key);
@@ -347,7 +348,12 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
             // DYNAMIC TIME-AWARE BANNER (Lite Orange Sunrise / Noon / Sunset / Night Animation)
             _buildTimeAwareBanner(),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 8),
+
+            // LIVE BANGLA NEWS TICKER (BBC Bangla & The Daily Star)
+            const DhakaNewsTicker(),
+
+            const SizedBox(height: 16),
 
             // Primary Services Grid
             Padding(
