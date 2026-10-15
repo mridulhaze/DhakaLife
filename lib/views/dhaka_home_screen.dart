@@ -16,6 +16,8 @@ import 'package:flutter_project_nutcm_1/views/nu_services_screen.dart';
 import 'package:flutter_project_nutcm_1/widget/bottomnavigationbar.dart';
 import 'package:flutter_project_nutcm_1/widget/service_icon.dart';
 import 'package:flutter_project_nutcm_1/widget/dhaka_news_ticker.dart';
+import 'package:flutter_project_nutcm_1/views/dhaka_radio_screen.dart';
+import 'package:flutter_project_nutcm_1/widget/dhaka_radio_mini_player.dart';
 
 class DhakaHomeScreen extends StatefulWidget {
   const DhakaHomeScreen({Key? key}) : super(key: key);
@@ -163,55 +165,61 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 16,
-              offset: const Offset(0, -4),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const DhakaRadioMiniPlayer(),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 16,
+                  offset: const Offset(0, -4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _bottomNavIndex,
-          onTap: (index) {
-            setState(() {
-              _bottomNavIndex = index;
-            });
-          },
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: const Color(0xFF1E88E5),
-          unselectedItemColor: const Color(0xFF94A3B8),
-          selectedLabelStyle:
-              const TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5),
-          unselectedLabelStyle: const TextStyle(fontSize: 11),
-          elevation: 0,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_filled),
-              label: 'হোম',
+            child: BottomNavigationBar(
+              currentIndex: _bottomNavIndex,
+              onTap: (index) {
+                setState(() {
+                  _bottomNavIndex = index;
+                });
+              },
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: Colors.white,
+              selectedItemColor: const Color(0xFF1E88E5),
+              unselectedItemColor: const Color(0xFF94A3B8),
+              selectedLabelStyle:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5),
+              unselectedLabelStyle: const TextStyle(fontSize: 11),
+              elevation: 0,
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home_filled),
+                  label: 'হোম',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.grid_view_rounded),
+                  label: 'সেবা',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.school_rounded),
+                  label: 'এনইউ হাব',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.emergency_rounded),
+                  label: 'জরুরি ৯৯৯',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person_rounded),
+                  label: 'প্রোফাইল',
+                ),
+              ],
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.grid_view_rounded),
-              label: 'সেবা',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.school_rounded),
-              label: 'এনইউ হাব',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.emergency_rounded),
-              label: 'জরুরি ৯৯৯',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_rounded),
-              label: 'প্রোফাইল',
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -985,6 +993,32 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
                       builder: (context) => const DhakaAiAssistantScreen()));
             },
           ),
+
+          // 11. Live Bangla Radio
+          _buildServiceCard(
+            title: 'লাইভ বাংলা রেডিও',
+            subtitle: 'গান, সংবাদ ও এফএম শো',
+            badge: 'লাইভ',
+            badgeColor: const Color(0xFF2E7D32),
+            serviceIcon: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8F5E9),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Icon(
+                PhosphorIconsFill.broadcast,
+                color: Color(0xFF2E7D32),
+                size: 26,
+              ),
+            ),
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const DhakaRadioScreen()));
+            },
+          ),
         ],
       ),
     );
@@ -1103,6 +1137,16 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
+              _buildQuickActionChip(
+                icon: PhosphorIcons.broadcast(PhosphorIconsStyle.fill),
+                label: 'লাইভ রেডিও',
+                color: const Color(0xFF2E7D32),
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const DhakaRadioScreen())),
+              ),
+              const SizedBox(width: 10),
               _buildQuickActionChip(
                 icon: PhosphorIcons.phone(PhosphorIconsStyle.fill),
                 label: 'পুলিশ কল ৯৯৯',

@@ -12,10 +12,21 @@ void main() {
 }
 */
 
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:flutter_project_nutcm_1/views/dhaka_home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await JustAudioBackground.init(
+      androidNotificationChannelId: 'com.example.flutter_project_nutcm_1.channel.audio',
+      androidNotificationChannelName: 'DhakaLife Radio',
+      androidNotificationOngoing: true,
+      androidStopForegroundOnPause: true,
+    );
+  } catch (e) {
+    print('JustAudioBackground initialization notice: $e');
+  }
   try {
     await Firebase.initializeApp();
   } catch (e) {

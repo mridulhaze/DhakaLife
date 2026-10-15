@@ -583,9 +583,11 @@ This file is the single source of truth for the project. Update it whenever:
 2. **Bangla News Ticker (Phase 2 Completed):**
    - Files: `lib/models/dhaka_news_model.dart`, `lib/services/dhaka_news_service.dart`, `lib/widget/dhaka_news_ticker.dart`, `lib/views/dhaka_home_screen.dart`, `test/news_service_test.dart`.
    - Implementation: Syndicated RSS headlines from BBC Bangla (`feeds.bbci.co.uk/bengali/rss.xml`) and The Daily Star Bangla (`bangla.thedailystar.net/rss.xml`). Clean horizontal ticker with red "সংবাদ" badge, source pill attribution, auto-scrolling headline rotation, in-browser authentic article viewing, 10-minute caching, duplicate filtering, offline fallback, and 4 unit tests. Verified on Genymotion Android 15.
-3. **Bangla Radio (Target: Phase 3):**
-   - No audio playback dependencies or background services currently installed.
-   - Android foreground service and lock-screen controls needed (`just_audio` / `audio_service`).
+3. **Bangla Radio (Phase 3 Completed):**
+   - Files: `lib/models/dhaka_radio_station.dart`, `lib/services/dhaka_radio_service.dart`, `lib/views/dhaka_radio_screen.dart`, `lib/widget/dhaka_radio_mini_player.dart`, `lib/views/dhaka_home_screen.dart`, `android/app/src/main/AndroidManifest.xml`, `android/app/src/main/kotlin/com/example/flutter_project_nutcm_1/MainActivity.kt`, `test/radio_service_test.dart`.
+   - Implementation: Integrated `just_audio` and `just_audio_background` with Android `AudioServiceActivity` and foreground service media playback. Streamlined 6 verified Bangla radio stations (Betar Bangla, Jago FM, Radio GoonGoon, Mellow Bangla, Peoples Radio, Universal Health Radio). Features active hero player card, volume slider, station picker, persistent Android system notification shade controls with artwork/tagline, screen-off background playback, and persistent floating mini-player. 3 unit tests added (13/13 total tests passing). Verified on Genymotion Android 15.
+4. **Map and Nearby Places (Target: Phase 4):**
+   - In-app map view and nearby Dhaka utility/artisan navigation.
 
 ---
 
@@ -651,5 +653,47 @@ This file is the single source of truth for the project. Update it whenever:
   - Successfully fetched live headlines from BBC News বাংলা (`screen_phase2_home.png`).
   - Verified smooth headline transition (`screen_phase2_rotate.png`).
   - Verified headline tap opens article in system browser (`screen_phase2_tap.png` & `screen_phase2_back2.png`).
+
+---
+
+## 28. Phase 3 — Free Bangla Radio Activation & Background Playback Records (October 15, 2026)
+
+### Implementation Summary
+- **Verified Audio Streams:**
+  - Betar Bangla (বেতার বাংলা, 822 Live: `https://radio.canstream.co.uk:8022/live.mp3` - HTTP 200 `audio/mpeg`).
+  - Jago FM 94.4 (জাগো এফএম: `http://139.59.86.99:12496/stream` - HTTP 200 `audio/mpeg`).
+  - Radio GoonGoon (রেডিও গুনগুন: `https://audio.streamcast.xyz/listen/radiogoongoon/radio.mp3` - HTTP 200 `audio/mpeg`).
+  - Mellow Bangla (মেলো বাংলা: `https://radio.mellowbangla.com/stream` - HTTP 200 `audio/mpeg`).
+  - Peoples Radio 91.6 (পিপলস রেডিও: `https://s3.myradiostream.com:14498/listen.mp3` - HTTP 200 `audio/mpeg`).
+  - Universal Health Radio (স্বাস্থ্য বার্তা রেডিও: `https://radio.universalhealthradio.org/uhr-bn.mp3` - HTTP 200 `audio/mpeg`).
+- **Android Platform & Foreground Service Configuration:**
+  - Extended `AudioServiceActivity` in `MainActivity.kt`.
+  - Added permissions in `AndroidManifest.xml`: `WAKE_LOCK`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`.
+  - Configured `AudioService` foreground service and `MediaButtonReceiver` in `AndroidManifest.xml`.
+  - Initialized `JustAudioBackground.init` in `lib/main.dart` with custom notification channel `DhakaLife Radio`.
+- **Typed Model (`DhakaRadioStation` in `lib/models/dhaka_radio_station.dart`):**
+  - Fields: `id`, `nameBn`, `nameEn`, `tagline`, `frequency`, `streamUrl`, `primaryColorValue`, `category`.
+  - Full JSON serialization for future persistence.
+- **Service Layer (`DhakaRadioService` in `lib/services/dhaka_radio_service.dart`):**
+  - Singleton `GetxService` holding `AudioPlayer`.
+  - Injects `MediaItem` tag (title, album, artist, artUri, frequency) into `AudioSource.uri` for native lock-screen and notification rendering.
+  - Reactive streams for `currentStation`, `isPlaying`, `isBuffering`, `hasError`, `volume`.
+- **UI Architecture:**
+  - Full Screen (`DhakaRadioScreen` in `lib/views/dhaka_radio_screen.dart`): Hero player card, dynamic color gradient matching station theme, live streaming indicator dot, volume slider, screen-off advice banner, and station selector list with play/pause icons.
+  - Floating Mini Player (`DhakaRadioMiniPlayer` in `lib/widget/dhaka_radio_mini_player.dart`): Docked directly above `BottomNavigationBar` in `DhakaHomeScreen` across all tabs. Enables one-tap play/pause, close, and tap-to-expand.
+  - Quick Actions Integration: Added "লাইভ রেডিও" quick action chip and primary service card on `DhakaHomeScreen`.
+- **Automated Testing Suite (`test/radio_service_test.dart`):**
+  - 3/3 radio unit tests passing:
+    - Default station metadata verification [PASS]
+    - JSON serialization and deserialization [PASS]
+    - Core station presence (Betar Bangla, Jago FM) [PASS]
+  - Total project test suite: 13/13 tests passing.
+- **Emulator Verification:**
+  - Tested on Genymotion Android 15 (`192.168.246.103:5555`).
+  - Verified navigation from Home tab to Radio screen (`screen_phase3_radio_screen_success.png`).
+  - Verified active live playback with green status badge (`screen_phase3_playing_actual.png`).
+  - Verified background playback in Android System Notification Shade when minimized (`screen_phase3_notification.png` & `screen_shade.png`).
+  - Verified persistent floating mini player on Home screen (`screen_miniplayer_home.png`).
+
 
 
