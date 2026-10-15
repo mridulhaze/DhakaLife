@@ -737,3 +737,57 @@ This file is the single source of truth for the project. Update it whenever:
   - Verified opening from Card 12 on dashboard (`screen_card12_clicked.png`).
   - Verified OpenStreetMap raster tiles loaded with full road, area, and landmark typography (`screen_marker_tap.png`).
   - Verified tapping landmark markers displays bottom details sheet with address, phone number, call action, and directions (`screen_sheet_opened.png`).
+
+---
+
+## 30. Phase 5 — Full Dhaka Utilities Activation (Completed)
+
+### Implementation & Verification Summary
+- **Transit & Metro Guide (`DhakaBusMetroScreen`):**
+  - Activated MRT Line-6 full corridor (16 stations: Uttara North to Motijheel) with station stops, individual fares, travel times, and operational hours.
+  - Activated 10+ core city bus routes (Prajapati, Bikolpo, Shadhin Express, Al Makkah, Taranga Plus, etc.) with search filter by bus name and area.
+  - Verified on Genymotion: `screen_bus_metro_actual.png` & `screen_bus_routes.png`.
+- **Daily Commodity Market Tracker (`DhakaBazarScreen`):**
+  - Integrated essential daily commodities across categories (Miniket Rice, Nazirshail, Lentils, Onion, Potato, Farm Eggs, Broiler & Sonali Chicken) with live price variance indicators and market attribution (Karwan Bazar, Mirpur 1, Mohammadpur Krishi Market, New Market).
+  - Verified on Genymotion: `screen_bazar.png`.
+- **Emergency 999 Directory (`DhakaEmergencyScreen`):**
+  - Prominent 1-touch 999 call button with `tel:999` intent.
+  - Essential hotlines: Shasthya Batayon (16263), National Information Call Center (333), Child & Women Abuse Prevention (109), Fire Service Central Control Room, and Dhaka Medical emergency lines.
+  - Verified on Genymotion: `screen_emergency.png`.
+- **Integrated Craftsmen & Local Services (`DhakaNearbyServicesScreen`):**
+  - Seamlessly merged all features from `khub-e-dorkar`: Verified Electricians, Plumbers, AC Technicians, Home Cleaners, Carpenters, Gas Stove Mechanics, and 24h Pharmacies with verified ratings, pricing, badges, and direct call actions.
+  - Added spatial map launcher button directly to app bar.
+- **National University AIS Hub & Sub-Cards:**
+  - Preserved and verified the 4 requested sub-cards:
+    1. লোকেশন ও দূরত্ব (Offices & Tour Distances)
+    2. কর্মকর্তা ও কর্মচারী (Employee Directory)
+    3. অধিভুক্ত কলেজ (Affiliated Colleges)
+    4. নোটিশ বোর্ড (All Public Notices with nu.ac.bd live fetch)
+  - Verified on Genymotion: `screen_nuhub.png`.
+- **Developer & Profile Screen:**
+  - Integrated official portfolio bio, qualifications, and GitHub link from `https://mridulhaze.github.io/`.
+  - Verified on Genymotion: `screen_tab_profile.png`.
+
+---
+
+## 31. Phase 6 & 7 — Release Readiness & Signed APK Deliverable (Completed)
+
+### Release Deliverable Metadata
+- **App Name:** DhakaLife (ঢাকা লাইভ - ঢাকা সুপার অ্যাপ)
+- **Version:** `1.2.0` (Build `2`)
+- **Package ID:** `com.example.flutter_project_nutcm_1`
+- **Output Artifacts:**
+  - Canonical Release Path: `build\app\outputs\flutter-apk\app-release.apk`
+  - Root Distribution Copy: `DhakaLife_v1.2.0_release.apk`
+  - File Size: `84,113,459 bytes` (~80.2 MB)
+  - SHA256 Hash: `04EE9060BC06F81B232FB1B657CE23DB6EE41D474D886F0801903F7B288F095D`
+- **Keystore & Security Signing:**
+  - Keystore File: `android/app/dhakalife_release.jks` (2048-bit RSA)
+  - Alias: `dhakalife`
+  - Signature Schemes: Full **v1 (JAR Signature)** and **v2 (Full APK Signature)** enabled in `buildTypes.release`.
+  - Fixes Android install warning: Eliminates Play Protect untrusted/unverified warning on real mobile devices by deploying a cryptographic signature chain.
+- **Automated Verification:**
+  - 16/16 Unit & Model Tests Passing (`flutter test`).
+  - Tree-shaken font and icon assets: MaterialIcons (-98.8%), Phosphor (-97.6%).
+  - Clean uninstallation of debug instance and fresh installation of `app-release.apk` on Genymotion emulator (`192.168.246.103:5555`).
+  - Verified initial launch, ambient sky time-of-day rendering, live Open-Meteo weather, rolling Bangla RSS news ticker, service grid cards, and navigation tabs (`screen_release_home.png`).
