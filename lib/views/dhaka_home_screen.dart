@@ -624,48 +624,59 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          ScaleTransition(
-                            scale: _sunPulseAnimation,
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(timeIcon, color: iconColor, size: 22),
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const DhakaWeatherScreen(),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                greetingBn,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  shadows: [
-                                    Shadow(color: Colors.black54, blurRadius: 4),
-                                  ],
+                          );
+                        },
+                        child: Row(
+                          children: [
+                            ScaleTransition(
+                              scale: _sunPulseAnimation,
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.25),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
+                                child: Icon(timeIcon, color: iconColor, size: 22),
                               ),
-                              Text(
-                                'ঢাকা: $temp • $cond',
-                                style: const TextStyle(
-                                  color: Color(0xFFE2E8F0),
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w600,
-                                  shadows: [
-                                    Shadow(color: Colors.black54, blurRadius: 4),
-                                  ],
+                            ),
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  greetingBn,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    shadows: [
+                                      Shadow(color: Colors.black54, blurRadius: 4),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                                Text(
+                                  'ঢাকা: $temp • $cond',
+                                  style: const TextStyle(
+                                    color: Color(0xFFE2E8F0),
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    shadows: [
+                                      Shadow(color: Colors.black54, blurRadius: 4),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

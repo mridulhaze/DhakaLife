@@ -254,69 +254,45 @@ class DhakaDataService {
     ];
   }
 
-  // Live Weather from Open-Meteo for Dhaka with caching and graceful offline fallback
-  static Future<Map<String, dynamic>> fetchDhakaWeather() async {
-    try {
-      final client = HttpClient();
-      client.connectionTimeout = const Duration(seconds: 4);
-      final request = await client.getUrl(Uri.parse(
-          'https://api.open-meteo.com/v1/forecast?latitude=23.8103&longitude=90.4125&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&timezone=Asia%2FDhaka'));
-      final response = await request.close();
-      if (response.statusCode == 200) {
-        final body = await response.transform(utf8.decoder).join();
-        final json = jsonDecode(body);
-        final current = json['current'];
-        final double temp = (current['temperature_2m'] as num).toDouble();
-        final double feelsLike = (current['apparent_temperature'] as num).toDouble();
-        final int humidity = (current['relative_humidity_2m'] as num).toInt();
-        final double wind = (current['wind_speed_10m'] as num).toDouble();
-        final int code = (current['weather_code'] as num).toInt();
+  // Cached weather instance in memory
+  static DhakaWeatherData? _cachedWeatherData;
 
-        String conditionBn = 'স্বাভাবিক আকাশ';
-        String conditionEn = 'Clear sky';
-        IconData icon = Icons.wb_sunny;
-
-        if (code >= 51 && code <= 67) {
-          conditionBn = 'হালকা থেকে মাঝারি বৃষ্টি';
-          conditionEn = 'Light Rain';
-          icon = Icons.grain;
-        } else if (code >= 80 && code <= 99) {
-          conditionBn = 'বজ্রসহ বৃষ্টিপাত';
-          conditionEn = 'Thunderstorm';
-          icon = Icons.thunderstorm;
-        } else if (code >= 1 && code <= 3) {
-          conditionBn = 'আংশিক মেঘলা রোদ';
-          conditionEn = 'Partly Cloudy';
-          icon = Icons.cloud_queue;
-        }
-
-        return {
-          'temperature': '${temp.round()}°C',
-          'feelsLike': '${feelsLike.round()}°C',
-          'conditionBn': conditionBn,
-          'conditionEn': conditionEn,
-          'humidity': '$humidity%',
-          'windSpeed': '$wind কিমি/ঘণ্টা',
-          'icon': icon,
-          'isLive': true,
-          'updatedTime': 'এখনই হালনাগাদকৃত (লাইভ)',
-        };
-      }
-    } catch (e) {
-      // Graceful fallback if device has slow or offline connection
+  /// Fetch typed weather data from Open-Meteo API with timeout and offline caching
+  static Future<DhakaWeatherData> fetchDhakaWeatherData({bool forceRefresh = false}) async {
+    if (!forceRefresh && _cachedWeatherData != null && _cachedWeatherData!.isLive) {
+      return _cachedWeatherData!;
     }
 
-    return {
-      'temperature': '29°C',
-      'feelsLike': '32°C',
-      'conditionBn': 'আংশিক মেঘলা ও রোদ',
-      'conditionEn': 'Partly Cloudy',
-      'humidity': '৬৪%',
-      'windSpeed': '৯ কিমি/ঘণ্টা',
-      'icon': Icons.wb_cloudy,
-      'isLive': false,
-      'updatedTime': 'অফলাইন ক্যাশ ডেটা (Dhaka standard)',
-    };
+    try {
+      final client = HttpClient();
+      client.connectionTimeout = const Duration(seconds: 5);
+      final uri = Uri.parse(
+          'https://api.open-meteo.com/v1/forecast?latitude=23.8103&longitude=90.4125&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&timezone=Asia%2FDhaka');
+      final request = await client.getUrl(uri);
+      final response = await request.close().timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final body = await response.transform(utf8.decoder).join();
+        final json = jsonDecode(body) as Map<String, dynamic>;
+        final weather = DhakaWeatherData.fromOpenMeteoJson(json);
+        _cachedWeatherData = weather;
+        return weather;
+      }
+    } catch (e) {
+      // Graceful offline fallback on error, timeout, or no internet
+    }
+
+    if (_cachedWeatherData != null) {
+      return _cachedWeatherData!;
+    }
+
+    return DhakaWeatherData.fallback();
+  }
+
+  /// Legacy map-based weather fetcher for backward-compatibility
+  static Future<Map<String, dynamic>> fetchDhakaWeather({bool forceRefresh = false}) async {
+    final weather = await fetchDhakaWeatherData(forceRefresh: forceRefresh);
+    return weather.toLegacyMap();
   }
 
   // Fetch Live Recent Notices from NU Website (https://www.nu.ac.bd/recent-news-notice.php)

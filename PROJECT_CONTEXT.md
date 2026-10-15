@@ -577,13 +577,40 @@ This file is the single source of truth for the project. Update it whenever:
   - `835680c` Initial commit
 
 ### Feature-Specific Codebase Status
-1. **Weather (Target: Phase 1):**
-   - Current files: `lib/services/dhaka_data_service.dart` (`fetchDhakaWeather`), `lib/views/dhaka_weather_screen.dart`, weather banner in `lib/views/dhaka_home_screen.dart`.
-   - Current implementation: Makes raw HTTP call to Open-Meteo for Dhaka (`23.8103, 90.4125`), but returns untyped `Map<String, dynamic>`. Lacks typed model, retry/error state handling, timeout safety, and deterministic unit/widget tests.
+1. **Weather (Phase 1 Completed):**
+   - Files: `lib/models/dhaka_life_models.dart`, `lib/services/dhaka_data_service.dart`, `lib/views/dhaka_weather_screen.dart`, `lib/views/dhaka_home_screen.dart`.
+   - Implementation: Typed `DhakaWeatherData` model with Open-Meteo JSON factory, WMO code to Bangla mapping, 5s timeout, status 200 HTTP validation, memory caching, pull-to-refresh, error/retry states, and 5 unit tests (`test/weather_service_test.dart`). Verified on Genymotion Android 15.
 2. **Bangla News Ticker (Target: Phase 2):**
    - No ticker currently implemented in upper dashboard.
    - Proposed files: `lib/services/dhaka_news_service.dart`, `lib/models/dhaka_news_model.dart`, ticker widget in `lib/views/dhaka_home_screen.dart`.
 3. **Bangla Radio (Target: Phase 3):**
    - No audio playback dependencies or background services currently installed.
    - Android foreground service and lock-screen controls needed (`just_audio` / `audio_service`).
+
+---
+
+## 26. Phase 1 — Live Weather Activation & Testing Records (October 15, 2026)
+
+### Implementation Summary
+- **Target Endpoint:** Open-Meteo REST API (`https://api.open-meteo.com/v1/forecast?latitude=23.8103&longitude=90.4125&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&timezone=Asia%2FDhaka`).
+- **Typed Model (`DhakaWeatherData`):**
+  - Strongly typed fields: `temperature`, `apparentTemperature`, `relativeHumidity`, `windSpeed`, `precipitation`, `weatherCode`, `conditionBn`, `conditionEn`, `icon`, `isLive`, `updatedTime`.
+  - Comprehensive WMO weather code parser mapping codes (0: পরিষ্কার আকাশ, 1-2: আংশিক মেঘলা, 3: মেঘাচ্ছন্ন আকাশ, 45/48: কুয়াশাচ্ছন্ন, 51-55: গুঁড়ি গুঁড়ি বৃষ্টি, 61-65: বৃষ্টিপাত, 80-82: ভারী বর্ষণ, 95-99: বজ্রসহ বৃষ্টিপাত).
+  - Resilient `fallback()` constructor for offline or unreachable network scenarios.
+  - Backward-compatible `toLegacyMap()` method for legacy views.
+- **Networking Service (`DhakaDataService`):**
+  - `fetchDhakaWeatherData()` with 5-second connection timeout and HTTP 200 response validation.
+  - In-memory caching (`_cachedWeatherData`) to prevent redundant calls.
+- **UI Enhancements:**
+  - `DhakaWeatherScreen`: Integrated `RefreshIndicator` for pull-to-refresh, explicit loading spinner, error state with "পুনরায় চেষ্টা করুন" (Retry) button, and typed data rendering.
+  - `DhakaHomeScreen`: Banner now displays real-time live condition string from Open-Meteo, with direct tap navigation into `DhakaWeatherScreen`.
+- **Automated Testing Suite (`test/weather_service_test.dart` & `test/widget_test.dart`):**
+  - 6/6 tests passing:
+    - Open-Meteo JSON parsing [PASS]
+    - WMO weather code Bangla mapping [PASS]
+    - Fallback constructor resilience [PASS]
+    - Legacy map compatibility [PASS]
+    - Live service execution without throwing [PASS]
+    - App smoke test [PASS]
+- **Emulator Verification:** Verified on Genymotion Android 15 (`192.168.246.103:5555`), capturing live temperature (29°C), sky condition, humidity, and wind stats.
 

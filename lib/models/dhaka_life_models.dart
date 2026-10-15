@@ -171,3 +171,111 @@ class NuNoticeItem {
   });
 }
 
+class DhakaWeatherData {
+  final double temperature;
+  final double apparentTemperature;
+  final int relativeHumidity;
+  final double windSpeed;
+  final double precipitation;
+  final int weatherCode;
+  final String conditionBn;
+  final String conditionEn;
+  final IconData icon;
+  final bool isLive;
+  final String updatedTime;
+
+  DhakaWeatherData({
+    required this.temperature,
+    required this.apparentTemperature,
+    required this.relativeHumidity,
+    required this.windSpeed,
+    required this.precipitation,
+    required this.weatherCode,
+    required this.conditionBn,
+    required this.conditionEn,
+    required this.icon,
+    required this.isLive,
+    required this.updatedTime,
+  });
+
+  static Map<String, dynamic> parseWmoCode(int code) {
+    if (code == 0) {
+      return {'bn': 'পরিষ্কার আকাশ', 'en': 'Clear Sky', 'icon': Icons.wb_sunny};
+    } else if (code == 1 || code == 2) {
+      return {'bn': 'আংশিক মেঘলা', 'en': 'Partly Cloudy', 'icon': Icons.wb_cloudy};
+    } else if (code == 3) {
+      return {'bn': 'মেঘাচ্ছন্ন আকাশ', 'en': 'Overcast', 'icon': Icons.cloud};
+    } else if (code == 45 || code == 48) {
+      return {'bn': 'কুয়াশাচ্ছন্ন', 'en': 'Foggy', 'icon': Icons.cloud_queue};
+    } else if (code >= 51 && code <= 55) {
+      return {'bn': 'গুঁড়ি গুঁড়ি বৃষ্টি', 'en': 'Drizzle', 'icon': Icons.grain};
+    } else if (code >= 61 && code <= 65) {
+      return {'bn': 'বৃষ্টিপাত', 'en': 'Rain', 'icon': Icons.water_drop};
+    } else if (code >= 66 && code <= 67) {
+      return {'bn': 'শীতল বৃষ্টি', 'en': 'Freezing Rain', 'icon': Icons.ac_unit};
+    } else if (code >= 80 && code <= 82) {
+      return {'bn': 'ভারী বর্ষণ', 'en': 'Rain Showers', 'icon': Icons.thunderstorm};
+    } else if (code >= 95 && code <= 99) {
+      return {'bn': 'বজ্রসহ বৃষ্টিপাত', 'en': 'Thunderstorm', 'icon': Icons.thunderstorm};
+    }
+    return {'bn': 'স্বাভাবিক আকাশ', 'en': 'Clear', 'icon': Icons.wb_sunny};
+  }
+
+  factory DhakaWeatherData.fromOpenMeteoJson(Map<String, dynamic> json) {
+    final current = json['current'] as Map<String, dynamic>? ?? {};
+    final double temp = (current['temperature_2m'] as num?)?.toDouble() ?? 29.0;
+    final double feels = (current['apparent_temperature'] as num?)?.toDouble() ?? temp;
+    final int humidity = (current['relative_humidity_2m'] as num?)?.toInt() ?? 65;
+    final double wind = (current['wind_speed_10m'] as num?)?.toDouble() ?? 8.0;
+    final double precip = (current['precipitation'] as num?)?.toDouble() ?? 0.0;
+    final int code = (current['weather_code'] as num?)?.toInt() ?? 0;
+
+    final conditionInfo = parseWmoCode(code);
+
+    return DhakaWeatherData(
+      temperature: temp,
+      apparentTemperature: feels,
+      relativeHumidity: humidity,
+      windSpeed: wind,
+      precipitation: precip,
+      weatherCode: code,
+      conditionBn: conditionInfo['bn'] as String,
+      conditionEn: conditionInfo['en'] as String,
+      icon: conditionInfo['icon'] as IconData,
+      isLive: true,
+      updatedTime: 'লাইভ হালনাগাদকৃত (${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')})',
+    );
+  }
+
+  factory DhakaWeatherData.fallback({String? note}) {
+    return DhakaWeatherData(
+      temperature: 29.0,
+      apparentTemperature: 33.0,
+      relativeHumidity: 68,
+      windSpeed: 8.5,
+      precipitation: 0.0,
+      weatherCode: 1,
+      conditionBn: 'আংশিক মেঘলা ও রোদ',
+      conditionEn: 'Partly Cloudy',
+      icon: Icons.wb_cloudy,
+      isLive: false,
+      updatedTime: note ?? 'অফলাইন ক্যাশ ডেটা (Dhaka standard)',
+    );
+  }
+
+  Map<String, dynamic> toLegacyMap() {
+    return {
+      'temperature': '${temperature.round()}°C',
+      'feelsLike': '${apparentTemperature.round()}°C',
+      'conditionBn': conditionBn,
+      'conditionEn': conditionEn,
+      'humidity': '$relativeHumidity%',
+      'windSpeed': '${windSpeed.toStringAsFixed(1)} কিমি/ঘণ্টা',
+      'precipitation': '${precipitation.toStringAsFixed(1)} মিমি',
+      'icon': icon,
+      'isLive': isLive,
+      'updatedTime': updatedTime,
+    };
+  }
+}
+

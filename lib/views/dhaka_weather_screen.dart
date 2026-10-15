@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/dhaka_life_models.dart';
 import '../services/dhaka_data_service.dart';
 
 class DhakaWeatherScreen extends StatefulWidget {
@@ -9,8 +10,9 @@ class DhakaWeatherScreen extends StatefulWidget {
 }
 
 class _DhakaWeatherScreenState extends State<DhakaWeatherScreen> {
-  Map<String, dynamic>? _weather;
+  DhakaWeatherData? _weather;
   bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -18,13 +20,27 @@ class _DhakaWeatherScreenState extends State<DhakaWeatherScreen> {
     _loadWeather();
   }
 
-  void _loadWeather() async {
-    final data = await DhakaDataService.fetchDhakaWeather();
-    if (mounted) {
-      setState(() {
-        _weather = data;
-        _isLoading = false;
-      });
+  Future<void> _loadWeather({bool forceRefresh = false}) async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final data = await DhakaDataService.fetchDhakaWeatherData(forceRefresh: forceRefresh);
+      if (mounted) {
+        setState(() {
+          _weather = data;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'আবহাওয়া তথ্য লোড করতে সমস্যা হয়েছে। ইন্টারনেট সংযোগ পরীক্ষা করুন।';
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -50,19 +66,47 @@ class _DhakaWeatherScreenState extends State<DhakaWeatherScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Color(0xFF1E88E5)),
-            onPressed: () {
-              setState(() => _isLoading = true);
-              _loadWeather();
-            },
+            onPressed: () => _loadWeather(forceRefresh: true),
           ),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF1E88E5)))
-          : ListView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.all(16),
-              children: [
+          : _errorMessage != null && _weather == null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.cloud_off, size: 56, color: Color(0xFF94A3B8)),
+                        const SizedBox(height: 12),
+                        Text(
+                          _errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 14, color: Color(0xFF475569)),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: () => _loadWeather(forceRefresh: true),
+                          icon: const Icon(Icons.refresh, size: 18),
+                          label: const Text('পুনরায় চেষ্টা করুন'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF1E88E5),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : RefreshIndicator(
+                  color: const Color(0xFF1E88E5),
+                  onRefresh: () => _loadWeather(forceRefresh: true),
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                    padding: const EdgeInsets.all(16),
+                    children: [
                 // Weather Main Card
                 Container(
                   padding: const EdgeInsets.all(22),
@@ -110,11 +154,11 @@ class _DhakaWeatherScreenState extends State<DhakaWeatherScreen> {
                               children: [
                                 CircleAvatar(
                                   radius: 4,
-                                  backgroundColor: _weather!['isLive'] ? Colors.greenAccent : Colors.amberAccent,
+                                  backgroundColor: _weather!.isLive ? Colors.greenAccent : Colors.amberAccent,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  _weather!['isLive'] ? 'লাইভ API' : 'ক্যাশড ডেটা',
+                                  _weather!.isLive ? 'লাইভ API' : 'ক্যাশড ডেটা',
                                   style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                                 ),
                               ],
@@ -130,7 +174,7 @@ class _DhakaWeatherScreenState extends State<DhakaWeatherScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                _weather!['temperature'],
+                                '${_weather!.temperature.round()}°C',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 48,
@@ -138,7 +182,7 @@ class _DhakaWeatherScreenState extends State<DhakaWeatherScreen> {
                                 ),
                               ),
                               Text(
-                                _weather!['conditionBn'],
+                                _weather!.conditionBn,
                                 style: const TextStyle(
                                   color: Color(0xFFE1F5FE),
                                   fontSize: 15,
@@ -147,13 +191,13 @@ class _DhakaWeatherScreenState extends State<DhakaWeatherScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'অনুভূত তাপমাত্রা: ${_weather!['feelsLike']}',
+                                'অনুভূত তাপমাত্রা: ${_weather!.apparentTemperature.round()}°C',
                                 style: const TextStyle(color: Color(0xFFB3E5FC), fontSize: 12),
                               ),
                             ],
                           ),
                           Icon(
-                            _weather!['icon'] as IconData,
+                            _weather!.icon,
                             size: 72,
                             color: Colors.amberAccent,
                           ),
@@ -165,9 +209,9 @@ class _DhakaWeatherScreenState extends State<DhakaWeatherScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildWeatherStat(Icons.water_drop_outlined, 'বাতাসে আর্দ্রতা', _weather!['humidity']),
-                          _buildWeatherStat(Icons.air, 'বাতাসের গতি', _weather!['windSpeed']),
-                          _buildWeatherStat(Icons.update, 'হালনাগাদ', 'আজ'),
+                          _buildWeatherStat(Icons.water_drop_outlined, 'বাতাসে আর্দ্রতা', '${_weather!.relativeHumidity}%'),
+                          _buildWeatherStat(Icons.air, 'বাতাসের গতি', '${_weather!.windSpeed.toStringAsFixed(1)} কিমি/ঘণ্টা'),
+                          _buildWeatherStat(Icons.update, 'হালনাগাদ', _weather!.isLive ? 'এখনই' : 'ক্যাশড'),
                         ],
                       ),
                     ],
@@ -242,6 +286,7 @@ class _DhakaWeatherScreenState extends State<DhakaWeatherScreen> {
                 ),
               ],
             ),
+          ),
     );
   }
 
