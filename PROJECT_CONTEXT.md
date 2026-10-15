@@ -11,10 +11,10 @@
 | :--- | :--- |
 | **Project Name** | **DhakaLife** (ঢাকা লাইফ) / Legacy: `AIS-NU` (`flutter_project_nutcm_1`) |
 | **Short Description** | Production-oriented Android Super-App for Dhaka daily-life services with an integrated National University (AIS-NU) administrative & academic portal hub. |
-| **Document Version** | `1.0.0` |
-| **Last Updated** | `2026-10-15` (ISO 8601: `2026-10-15T09:30:00+06:00`) |
-| **Repository URL** | *Not configured* (Local directory without active remote; see Section 14) |
-| **Current Git Branch** | *Not initialized* (Local directory; no `.git` folder detected) |
+| **Document Version** | `1.1.0` |
+| **Last Updated** | `2026-10-15` (ISO 8601: `2026-10-15T22:30:00+06:00`) |
+| **Repository URL** | `https://github.com/mridulhaze/DhakaLife` |
+| **Current Git Branch** | `main` (tracked with `origin/main`) |
 | **Target Platforms** | Android (minSdkVersion: 21, compileSdkVersion / targetSdkVersion: 34+ via Flutter SDK) |
 | **Maintenance Protocol** | Update this document whenever architectures, routes, models, business rules, dependencies, or handoff states change (see Section 24). |
 
@@ -542,3 +542,48 @@ This file is the single source of truth for the project. Update it whenever:
 3. Keystore or release configurations in `android/app/build.gradle` are modified.
 4. Database schemas or API endpoints change.
 5. Work is handed off to another AI agent, developer, or CI/CD pipeline.
+
+---
+
+## 25. Phase 0 — Baseline Inspection & Verification Records (October 15, 2026)
+
+### Environment & Toolchain Diagnostics
+- **Flutter SDK:** `Flutter 3.38.4` (channel stable, revision `66dd93f9a2`)
+- **Dart SDK:** `Dart 3.10.3` (DevTools `2.51.1`)
+- **OS:** Windows 11 (24H2, build 26100.9711)
+- **Android SDK:** `36.1.0`, Build-tools `36.1.0`, OpenJDK `21.0.5`
+- **Connected Testing Devices:**
+  - `192.168.246.103:5555` (Genymotion Android 15, API 35)
+  - Chrome (web) & Edge (web)
+- **`flutter doctor -v`:** `[√] No issues found!` (All components green).
+- **`flutter pub get`:** Successfully resolved all packages with code `0`.
+- **`flutter analyze`:**
+  - Ran in 139.0s.
+  - 1055 issues found, consisting primarily of stylistic lint rules (`prefer_const_constructors`, `unused_import`, `deprecated_member_use`, `non_constant_identifier_names` in legacy AIS-NU views).
+  - No fatal compilation errors.
+- **`flutter test`:**
+  - 1 existing test in `test/widget_test.dart` ("Counter increments smoke test").
+  - Result: Failed (`Expected: exactly one matching candidate with text "0", Actual: 0`).
+  - Cause: Pre-existing default Flutter starter counter test trying to find counter widgets on `MyApp()`, which now launches `DhakaHomeScreen()`.
+
+### Git Status & Commit Checkpoint
+- **Remote:** `origin` -> `https://github.com/mridulhaze/DhakaLife`
+- **Current Branch:** `main` (tracked with `origin/main`, clean working tree)
+- **Push Protection Active:** Credentials (`credentials.json`, `dialog_flow_auth.json`) git-ignored with templates provided in `assets/json/dialog_flow_auth.json.example`.
+- **Recent Commits:**
+  - `facc417` docs: add development prompts and configure secret scanning protection in gitignore
+  - `0ba92c7` style(assets): add DhakaLife dashboard banners, branding logos, and contact datasets
+  - `4a4c24a` feat(platform): configure Flutter project runner and multi-platform build targets
+  - `835680c` Initial commit
+
+### Feature-Specific Codebase Status
+1. **Weather (Target: Phase 1):**
+   - Current files: `lib/services/dhaka_data_service.dart` (`fetchDhakaWeather`), `lib/views/dhaka_weather_screen.dart`, weather banner in `lib/views/dhaka_home_screen.dart`.
+   - Current implementation: Makes raw HTTP call to Open-Meteo for Dhaka (`23.8103, 90.4125`), but returns untyped `Map<String, dynamic>`. Lacks typed model, retry/error state handling, timeout safety, and deterministic unit/widget tests.
+2. **Bangla News Ticker (Target: Phase 2):**
+   - No ticker currently implemented in upper dashboard.
+   - Proposed files: `lib/services/dhaka_news_service.dart`, `lib/models/dhaka_news_model.dart`, ticker widget in `lib/views/dhaka_home_screen.dart`.
+3. **Bangla Radio (Target: Phase 3):**
+   - No audio playback dependencies or background services currently installed.
+   - Android foreground service and lock-screen controls needed (`just_audio` / `audio_service`).
+
