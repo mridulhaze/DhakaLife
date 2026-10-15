@@ -695,5 +695,45 @@ This file is the single source of truth for the project. Update it whenever:
   - Verified background playback in Android System Notification Shade when minimized (`screen_phase3_notification.png` & `screen_shade.png`).
   - Verified persistent floating mini player on Home screen (`screen_miniplayer_home.png`).
 
+---
 
+## 29. Phase 4 — Map & Nearby Places Activation (Completed)
 
+### Implementation Summary
+- **Free & Resilient Mapping Engine:**
+  - Integrated `flutter_map: ^4.0.0` and `latlong2: ^0.8.2` using OpenStreetMap (OSM) standard raster tile layer (`https://tile.openstreetmap.org/{z}/{x}/{y}.png`).
+  - Completely eliminates dependence on proprietary Google Maps billing or Google Cloud Console API keys, ensuring 100% offline-ready rendering and zero API quota costs.
+- **Typed Landmark Model (`DhakaPlace` in `lib/models/dhaka_place_model.dart`):**
+  - Includes 15 verified, high-importance civic landmarks across Dhaka:
+    - **Hospitals (Emergency Red):** DMCH (Dhaka Medical), BSMMU (PG Hospital), Square Hospital, Kurmitola General Hospital, National Institute of Cardiovascular Diseases (NICVD).
+    - **Police Stations (Badge Blue):** Mirpur Thana, Dhanmondi Thana, Gulshan Thana, Uttara East Thana.
+    - **Metro Rail Stations (Transit Teal):** MRT-6 Uttara North, Mirpur-10, Farmgate, Secretariat/Press Club, Motijheel.
+    - **Emergency Services (Flame Orange):** Fire Service & Civil Defence National HQ (Fulbaria).
+  - Category filtering: `DhakaPlaceCategory` enum (`hospital`, `police`, `metro`, `fire`, `utility`) with localized titles and color badges.
+- **Interactive Map UI (`DhakaMapScreen` in `lib/views/dhaka_map_screen.dart`):**
+  - Interactive map canvas centered on central Dhaka (`23.8103, 90.4125`) with smooth pan and zoom controls (`MapController`).
+  - Search filter bar supporting real-time text query filtering across Bengali and English place names and addresses.
+  - Category filter pills horizontally scrollable for rapid filtering by service type.
+  - Quick Area Jump chips: "মিরপুর-১০", "ফার্মগেট", "শাহবাগ", "ধানমন্ডি" for one-tap camera animation.
+  - Detailed Bottom Modal Sheet (`_showPlaceModal`):
+    - Visual category icon and color badge
+    - 24/7 status pill
+    - Exact road and area address
+    - Hotline phone number
+    - Direct Call button (`tel:` scheme launcher)
+    - Google Maps / OSM Turn-by-Turn Directions launcher (`geo:` and web fallback)
+- **Dashboard & Sub-screen Integration:**
+  - Added Primary Service Card 12 ("ঢাকা লাইভ ম্যাপ") to `DhakaHomeScreen` services grid.
+  - Added "ঢাকা ম্যাপ" Quick Action chip to `DhakaHomeScreen` quick action row.
+  - Added top-app-bar Map button in `DhakaNearbyServicesScreen` for seamless handoff between craftsmen list and spatial map view.
+- **Automated Testing Suite (`test/map_places_test.dart`):**
+  - 3/3 map places unit tests passing:
+    - Default Dhaka landmarks dataset completeness [PASS]
+    - Category filtering logic [PASS]
+    - Case-insensitive and multi-language search filtering [PASS]
+  - Total project test suite: 16/16 tests passing.
+- **Emulator Verification:**
+  - Tested on Genymotion Android 15 (`192.168.246.103:5555`).
+  - Verified opening from Card 12 on dashboard (`screen_card12_clicked.png`).
+  - Verified OpenStreetMap raster tiles loaded with full road, area, and landmark typography (`screen_marker_tap.png`).
+  - Verified tapping landmark markers displays bottom details sheet with address, phone number, call action, and directions (`screen_sheet_opened.png`).

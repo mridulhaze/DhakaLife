@@ -18,6 +18,7 @@ import 'package:flutter_project_nutcm_1/widget/service_icon.dart';
 import 'package:flutter_project_nutcm_1/widget/dhaka_news_ticker.dart';
 import 'package:flutter_project_nutcm_1/views/dhaka_radio_screen.dart';
 import 'package:flutter_project_nutcm_1/widget/dhaka_radio_mini_player.dart';
+import 'package:flutter_project_nutcm_1/views/dhaka_map_screen.dart';
 
 class DhakaHomeScreen extends StatefulWidget {
   const DhakaHomeScreen({Key? key}) : super(key: key);
@@ -1019,6 +1020,32 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
                       builder: (context) => const DhakaRadioScreen()));
             },
           ),
+
+          // 12. Dhaka Live Map & Nearby Places
+          _buildServiceCard(
+            title: 'ঢাকা লাইভ ম্যাপ',
+            subtitle: 'নিকটবর্তী জরুরি স্থান',
+            badge: 'ওএসএম ম্যাপ',
+            badgeColor: const Color(0xFF0288D1),
+            serviceIcon: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE0F2FE),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Icon(
+                PhosphorIconsFill.mapTrifold,
+                color: Color(0xFF0288D1),
+                size: 26,
+              ),
+            ),
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const DhakaMapScreen()));
+            },
+          ),
         ],
       ),
     );
@@ -1145,6 +1172,16 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
                     context,
                     MaterialPageRoute(
                         builder: (context) => const DhakaRadioScreen())),
+              ),
+              const SizedBox(width: 10),
+              _buildQuickActionChip(
+                icon: PhosphorIcons.mapPin(PhosphorIconsStyle.fill),
+                label: 'ঢাকা ম্যাপ',
+                color: const Color(0xFF0288D1),
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const DhakaMapScreen())),
               ),
               const SizedBox(width: 10),
               _buildQuickActionChip(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/dorkar_models.dart';
 import '../services/dorkar_service.dart';
+import 'dhaka_map_screen.dart';
 
 class DhakaNearbyServicesScreen extends StatefulWidget {
   const DhakaNearbyServicesScreen({Key? key}) : super(key: key);
@@ -1332,6 +1333,17 @@ class _DhakaNearbyServicesScreenState extends State<DhakaNearbyServicesScreen>
           ),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.map_outlined,
+                color: Color(0xFF1D4ED8), size: 22),
+            tooltip: 'ঢাকা ম্যাপে দেখুন',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const DhakaMapScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.person_add_alt_1_rounded,
                 color: Color(0xFF1D4ED8), size: 22),
