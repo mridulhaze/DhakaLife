@@ -1,0 +1,734 @@
+# PROJECT: DhakaLife — Dhaka Daily Life Super App
+
+## ROLE AND OBJECTIVE
+
+Act as a senior Android architect, Flutter engineer, UI/UX designer, backend engineer, API integration specialist, cybersecurity engineer, and QA automation engineer.
+
+Build a production-oriented Android application called **DhakaLife** for residents of Dhaka, Bangladesh.
+
+The app must provide useful, frequently needed daily-life services through one clean, modern, fast, accessible, and Bangla-first interface.
+
+Use the attached Pathao-style app screenshot as the primary visual inspiration. Recreate its visual principles—compact service cards, rounded corners, clean spacing, strong visual hierarchy, colorful service icons, a prominent location-aware dashboard, and quick actions—without copying its logo, proprietary assets, or exact branding.
+
+IMPORTANT:
+- First inspect the existing project, if one exists.
+- Understand its architecture, screens, dependencies, database, and working features before changing anything.
+- If this is an existing application, extend it incrementally. Never delete working features, replace an established database, or rewrite the application unnecessarily.
+- If the project is empty, establish a clean, maintainable architecture.
+- Do not create a UI-only demo that falsely claims to have functional APIs or live data.
+- Implement working features wherever possible and clearly label unavailable integrations.
+
+---
+
+## 1. TARGET USERS AND LOCALIZATION
+
+Primary market: Dhaka, Bangladesh.
+
+Target users:
+- Students and office workers.
+- Families and senior citizens.
+- Daily public transport users.
+- Residents looking for emergency assistance.
+- People looking for nearby shops, hospitals, pharmacies, and household service providers.
+
+Localization requirements:
+- Bangla must be the default language.
+- Provide English as an optional language.
+- Support Bangla Unicode correctly on every screen.
+- Use BDT (৳) for monetary values.
+- Use the Asia/Dhaka timezone.
+- Use familiar Bangladeshi location names and administrative areas.
+- Provide a location search that supports Bangla and English spellings.
+- Design for budget Android phones and inconsistent mobile internet.
+- Do not require login to use public information, maps, calculators, and basic emergency-directory features.
+
+---
+
+## 2. DESIGN SYSTEM — INSPIRED BY THE ATTACHED SCREENSHOT
+
+Create a premium, compact, mobile-first dashboard.
+
+Visual direction:
+- White or near-white background.
+- Blue as the primary action color.
+- A restrained red or coral accent for important alerts.
+- Rounded service cards with subtle shadows.
+- Simple line icons and lightweight illustrations.
+- Compact cards with short titles and descriptions.
+- Clear typography and sufficient touch-target sizes.
+- Minimal visual clutter.
+- Smooth, lightweight animations.
+- Consistent spacing, typography, colors, iconography, and card dimensions.
+
+Create reusable design components:
+- AppHeader
+- LocationSelector
+- GlobalSearchBar
+- WeatherSummaryCard
+- EmergencyQuickActions
+- ServiceCategoryCard
+- NearbyPlaceCard
+- AlertBanner
+- ReportIssueCard
+- RecentActivityCard
+- LoadingSkeleton
+- EmptyState
+- OfflineBanner
+- ErrorState
+- PermissionExplanationDialog
+
+Use original, legally usable icons and assets. Avoid embedding large images unnecessarily.
+
+### Home dashboard layout
+
+1. Top header:
+   - DhakaLife logo and app name.
+   - Current area or selected location.
+   - Notification icon.
+   - Profile or settings icon.
+
+2. Location section:
+   - Selected area, such as Mohammadpur or Mirpur.
+   - Change-location action.
+   - A location permission prompt only when needed.
+
+3. Global search:
+   - Placeholder in Bangla: "কী খুঁজছেন?"
+   - Search hospitals, pharmacies, bus routes, services, public places, and emergency information.
+   - Support search suggestions and recent searches.
+
+4. Weather card:
+   - Current temperature and weather condition.
+   - Rain probability where available.
+   - Last updated timestamp.
+   - Source attribution and loading/error states.
+
+5. Emergency quick actions:
+   - Emergency numbers.
+   - Nearby hospitals.
+   - Blood donors.
+   - Share location.
+
+6. Daily services grid:
+   - Traffic & Routes.
+   - Bus & Metro Guide.
+   - Nearby Services.
+   - Hospital & Pharmacy.
+   - Weather & Flood Alerts.
+   - Bazar Price.
+   - Civic Issue Reporting.
+   - Government Information.
+   - Water, Gas & Electricity Updates.
+   - Daily Expense Calculator.
+   - Blood Donor Finder.
+   - Bangla AI Assistant.
+
+7. Nearby places section:
+   - Hospitals, pharmacies, ATMs, markets, transport stations, and essential services.
+   - Distance and available contact information.
+   - Map and list views.
+
+8. Community alerts:
+   - Verified road closures.
+   - User-reported waterlogging.
+   - Reported hazards and local service interruptions.
+   - Show source, timestamp, confidence, and verification status.
+
+9. Bottom navigation:
+   - Home
+   - Explore
+   - Map
+   - Alerts
+   - Profile
+
+The home dashboard must be configurable. Users should be able to reorder, hide, or favorite service categories.
+
+---
+
+## 3. CORE FEATURES AND IMPLEMENTATION REQUIREMENTS
+
+### FEATURE A: MAP AND NEARBY PLACES
+
+Use OpenStreetMap-compatible mapping technology.
+
+Functions:
+- Display the user's current location when permission is granted.
+- Search for nearby hospitals, pharmacies, ATMs, markets, restaurants, bus stops, metro stations, and other useful points of interest.
+- Support map and list views.
+- Show walking or driving routes when a suitable routing service is available.
+- Display distance, source, and last-updated information.
+- Let users search a manually selected area without granting location permission.
+
+Potential integrations:
+- OpenStreetMap.
+- Overpass API for points of interest.
+- OSRM or another suitable routing provider.
+- Android native location services.
+
+Engineering requirements:
+- Respect public API usage policies and rate limits.
+- Do not query Overpass repeatedly for every map movement.
+- Cache suitable search results.
+- Debounce user searches.
+- Handle missing coordinates and incomplete place data.
+- Provide attribution where required.
+- Never expose the user's exact location publicly without explicit consent.
+
+### FEATURE B: DHAKA PUBLIC TRANSPORT GUIDE
+
+Provide:
+- Bus route and stop search.
+- Origin and destination selection.
+- Available route alternatives.
+- Metro station directory and route information.
+- Estimated distance and travel duration when supported.
+- Fare information only when backed by reliable, dated data.
+- User-submitted route corrections with moderation.
+
+Important:
+- Do not invent bus routes, fares, operating hours, or live vehicle positions.
+- Distinguish verified data from community contributions.
+- Where live data is unavailable, display static route information and clearly label it.
+- Store route data in a maintainable, updateable database.
+
+### FEATURE C: WEATHER AND FLOOD ALERTS
+
+Potential provider: Open-Meteo or another suitable weather API.
+
+Functions:
+- Current weather.
+- Temperature and humidity where available.
+- Rain probability and forecast.
+- Severe weather information when provided by a reliable source.
+- Area-based waterlogging reports.
+- Weather-related notifications with user consent.
+
+Requirements:
+- Cache the last successful response.
+- Show the data source and update time.
+- Handle unavailable API responses.
+- Do not describe user-reported flooding as an official warning.
+- Do not present forecasts as guaranteed outcomes.
+
+### FEATURE D: EMERGENCY ASSISTANCE
+
+Provide:
+- Emergency contact directory.
+- One-tap phone calls using the Android dialer.
+- Nearby hospitals and emergency departments.
+- Ambulance and fire-service contact information where verified.
+- Optional location sharing with a selected trusted contact.
+- Blood donor search with consent-based contact details.
+
+Requirements:
+- Verify emergency numbers against authoritative sources before release.
+- Never fabricate emergency contacts or hospital capabilities.
+- Clearly distinguish emergency services from general directories.
+- Never delay access to emergency phone numbers behind login, advertising, or AI chat.
+- Request only necessary permissions.
+- Show an appropriate warning that the app is not a replacement for official emergency services.
+
+### FEATURE E: NEARBY HOUSEHOLD AND ESSENTIAL SERVICES
+
+Categories:
+- Electricians.
+- Plumbers.
+- Carpenters.
+- Mechanics.
+- Household repair providers.
+- Pharmacies.
+- Clinics and hospitals.
+- Other locally useful services.
+
+Each listing may contain:
+- Provider name.
+- Service category.
+- Service area.
+- Phone number.
+- Optional profile picture.
+- Working hours.
+- Indicative price, when supported.
+- Rating and review count.
+- Verification status.
+- Last-updated time.
+
+Support two types of listings:
+1. Verified providers maintained by the app.
+2. External or AI-assisted discoveries.
+
+Clearly distinguish verified providers from unverified discoveries. Do not automatically describe an internet-discovered business as verified.
+
+Provide reporting, duplicate detection, listing correction, and moderation features.
+
+### FEATURE F: DAILY BAZAR PRICE
+
+Allow users to explore prices of:
+- Rice.
+- Lentils.
+- Eggs.
+- Vegetables.
+- Fish.
+- Chicken.
+- Other common household essentials.
+
+Functions:
+- Search products.
+- Select market or neighborhood.
+- Compare reported prices.
+- Submit a price observation.
+- View the observation date and source.
+
+Validation:
+- Never label an unverified price as an official government price.
+- Detect suspicious values and duplicate reports.
+- Allow administrators to verify or reject submissions.
+- Show price freshness and confidence.
+- Do not promise citywide price coverage without adequate data.
+
+### FEATURE G: CIVIC ISSUE REPORTING
+
+Allow users to report:
+- Road potholes.
+- Waterlogging.
+- Garbage accumulation.
+- Broken streetlights.
+- Damaged public infrastructure.
+- Other locally relevant civic issues.
+
+A report can contain:
+- Category.
+- Description in Bangla or English.
+- Optional photograph.
+- Approximate location.
+- Submission timestamp.
+- Verification status.
+- Report status.
+
+Workflow:
+SUBMITTED → UNDER REVIEW → VERIFIED or REJECTED → RESOLVED, where applicable.
+
+Requirements:
+- Prevent spam and duplicate submissions.
+- Remove or restrict sensitive personal information in public reports.
+- Obtain permission before uploading photographs or location information.
+- Provide a report reference ID.
+- Show whether the issue has merely been reported or officially acknowledged.
+- Never claim a government department received a report unless an actual integration confirms it.
+
+### FEATURE H: DAILY EXPENSE CALCULATOR
+
+Provide an offline-first calculator for:
+- Daily expenses.
+- Household shopping.
+- Monthly budget.
+- Bill splitting.
+- Expense categories.
+- Spending summaries.
+
+Requirements:
+- Work without an account.
+- Store data locally by default.
+- Support export and optional backup.
+- Clearly explain any cloud synchronization.
+- Do not collect financial-account credentials.
+
+### FEATURE I: GOVERNMENT INFORMATION DIRECTORY
+
+Provide categorized public information about:
+- Passport services.
+- Birth registration.
+- Government notices.
+- Utility service information.
+- Relevant citizen-service portals.
+- Public transport or municipal notices where available.
+
+Requirements:
+- Prefer official government sources.
+- Store source URLs and last-verified timestamps.
+- Open official websites safely.
+- Avoid scraping restricted websites.
+- Do not imply that DhakaLife is a government application.
+- Clearly distinguish information directories from official application or payment services.
+
+### FEATURE J: BANGLA AI ASSISTANT
+
+Build an optional assistant that can answer questions such as:
+- "মোহাম্মদপুর থেকে মতিঝিল কীভাবে যাব?"
+- "আমার কাছের হাসপাতাল কোথায়?"
+- "আজ বৃষ্টির সম্ভাবনা কেমন?"
+- "নিকটবর্তী ফার্মেসি খুঁজুন।"
+
+Architecture:
+- Use a pluggable LLM provider interface.
+- Support an optional free-tier API if its current terms permit the intended use.
+- Use retrieved, current, source-backed information for factual local answers.
+- Integrate existing search, maps, weather, and directory services through controlled tools.
+- Return concise answers in Bangla by default.
+- Show sources, timestamps, and uncertainty.
+- Ask before sharing location or personal information with an external AI provider.
+- Never allow the AI to invent live traffic, opening hours, prices, availability, or emergency information.
+
+If no API key is configured, the rest of the application must remain functional. Provide a clear configuration guide and an appropriate unavailable state.
+
+---
+
+## 4. TECHNICAL ARCHITECTURE
+
+Preferred implementation:
+- Flutter and Dart for Android.
+- A clean, modular architecture with presentation, domain, and data layers.
+- Riverpod or another consistent state-management solution.
+- Repository pattern for all external data sources.
+- Dio or an equivalent HTTP client.
+- SQLite/Drift or another suitable local database.
+- Secure storage for sensitive local values.
+- Firebase Cloud Messaging for optional push notifications.
+- Firebase or Supabase as an optional backend, subject to free-tier and security evaluation.
+
+If the existing project already uses a stable, appropriate architecture, preserve it rather than replacing it unnecessarily.
+
+Organize modules by feature, for example:
+- features/home
+- features/maps
+- features/transport
+- features/weather
+- features/emergency
+- features/services
+- features/bazar
+- features/civic_reports
+- features/expenses
+- features/government
+- features/ai_assistant
+- features/settings
+
+Create shared modules for:
+- Networking.
+- Configuration.
+- Location.
+- Caching.
+- Logging.
+- Localization.
+- Authentication, if needed.
+- Permissions.
+- Error handling.
+- Analytics, if enabled with appropriate privacy safeguards.
+
+Use dependency injection and environment-based configuration.
+
+Avoid putting every feature into one oversized screen or one monolithic service class.
+
+---
+
+## 5. FREE API STRATEGY AND FALLBACKS
+
+Evaluate suitable providers for:
+- Maps and points of interest.
+- Routing.
+- Weather.
+- Geocoding.
+- Backend and database.
+- Push notifications.
+- Optional AI.
+
+Before integrating each provider:
+1. Check its current official documentation.
+2. Check rate limits and pricing.
+3. Check commercial-use and attribution terms.
+4. Determine whether an API key is required.
+5. Determine whether caching is permitted.
+6. Document its limitations.
+7. Implement a provider abstraction where practical.
+
+Security rules:
+- Never commit API keys or service-account credentials to source control.
+- Never place privileged backend secrets inside the Android APK.
+- Restrict API keys where supported.
+- Keep privileged operations on a secured backend.
+- Do not bypass API quotas or access restrictions.
+
+Fallback rules:
+- Weather unavailable → show cached data with its original timestamp.
+- Maps unavailable → provide a useful list view where cached data exists.
+- Location permission denied → allow manual area selection.
+- Internet unavailable → retain access to offline calculators, saved contacts, and cached information.
+- AI unavailable → preserve all non-AI features.
+- No verified route data → explain the limitation rather than generating fictional directions.
+
+Create a provider status/configuration screen for administrators or developers.
+
+---
+
+## 6. BACKEND AND DATABASE DESIGN
+
+Design the database according to actual feature requirements.
+
+Suggested entities:
+- users
+- user_preferences
+- saved_places
+- service_categories
+- service_providers
+- provider_verification
+- places
+- transport_routes
+- transport_stops
+- weather_cache
+- bazar_products
+- price_observations
+- civic_reports
+- civic_report_updates
+- blood_donor_profiles
+- notifications
+- feedback
+- moderation_actions
+- api_provider_status
+
+Use appropriate primary keys, foreign keys, indexes, timestamps, validation, and migration scripts.
+
+Do not create every table blindly. Document the purpose and relationships of each implemented entity.
+
+Requirements:
+- Use server-side validation.
+- Apply role-based access control.
+- Protect private user information.
+- Prevent unauthorized changes to verified records.
+- Store moderation and administrative actions in an audit trail.
+- Implement backup and recovery procedures.
+- Establish data-retention and deletion policies.
+- Do not expose unrestricted database queries to clients.
+
+If Firebase or Supabase is used, configure production-appropriate security rules or row-level security. Do not rely on hidden buttons or client-side checks for authorization.
+
+---
+
+## 7. PRIVACY, SECURITY, AND RESPONSIBLE DESIGN
+
+Implement:
+- Least-privilege Android permissions.
+- Clear permission explanations.
+- Optional account creation.
+- Secure transport using HTTPS.
+- Input validation and output encoding.
+- Protection against injection and unauthorized data access.
+- Safe image upload and file-size restrictions.
+- Rate limiting for public submissions.
+- Spam and abuse controls.
+- Secure administrator authentication.
+- User data export and deletion where applicable.
+- A privacy policy and terms of use.
+
+Do not collect contacts, call logs, background location, or other sensitive information unless essential and explicitly authorized.
+
+Do not store precise location history by default.
+
+Do not expose blood donors' or service providers' personal information without appropriate consent.
+
+If location-based notifications are introduced, request only the minimum permissions needed and explain how they work.
+
+---
+
+## 8. PERFORMANCE AND LOW-END DEVICE SUPPORT
+
+Optimize for:
+- Slow mobile networks.
+- Limited RAM.
+- Older Android devices supported by the selected Flutter and plugin versions.
+- Large lists of places and service providers.
+- Battery-efficient location access.
+
+Requirements:
+- Pagination for large result sets.
+- Debounced search.
+- Image resizing and caching.
+- Appropriate network timeouts.
+- Retry with exponential backoff where suitable.
+- Request cancellation when screens change.
+- Cache expiry policies.
+- Offline and empty states.
+- No unnecessary background polling.
+- Avoid excessive map API requests.
+- No blocking database or network operations on the UI thread.
+
+Define and measure performance targets on a representative test device rather than claiming unmeasured performance.
+
+---
+
+## 9. ACCESSIBILITY AND USER EXPERIENCE
+
+- Use readable Bangla fonts.
+- Support text scaling.
+- Provide meaningful screen-reader labels.
+- Maintain adequate color contrast.
+- Use sufficiently large touch targets.
+- Avoid relying on color alone to communicate status.
+- Keep the primary home screen understandable to non-technical users.
+- Provide a clear route back from every feature.
+- Display loading, success, error, empty, and offline states consistently.
+- Confirm destructive actions.
+- Avoid forced sign-up and intrusive advertising.
+
+---
+
+## 10. TESTING REQUIREMENTS
+
+Create unit tests for:
+- Route and distance calculations where implemented.
+- Price comparison and validation.
+- Expense calculations.
+- Repository and caching logic.
+- Input validation.
+- Permission-dependent behavior.
+
+Create integration tests for:
+- Location denied and granted.
+- Manual location selection.
+- API success, timeout, and failure.
+- Cached data and offline mode.
+- Service search and filters.
+- Civic report submission.
+- Authentication and access control where applicable.
+- Bangla and English localization.
+- Notification permission and delivery flows where configured.
+
+Add widget tests for:
+- Home dashboard.
+- Service category cards.
+- Search.
+- Nearby place lists.
+- Error and empty states.
+- Emergency quick actions.
+
+Never report tests as passing unless they have actually been executed.
+
+---
+
+## 11. MVP ACCEPTANCE CHECKLIST
+
+The initial MVP is acceptable only when:
+
+[ ] The application builds successfully for Android.
+[ ] The home screen follows the attached screenshot's visual direction.
+[ ] Bangla is the default language.
+[ ] The global search accepts Bangla and English queries.
+[ ] Manual location selection works without GPS permission.
+[ ] Nearby-place search uses a real configured data source.
+[ ] Map and list views work when their provider is available.
+[ ] Weather data is fetched from a configured source and displays its timestamp.
+[ ] Emergency contact actions work and verified contact details are present.
+[ ] Essential-service listings show their verification status.
+[ ] The expense calculator works offline.
+[ ] Civic reports are validated and saved to the configured backend when available.
+[ ] Unavailable APIs produce honest, useful fallback states.
+[ ] The app does not invent live data or official confirmations.
+[ ] API keys and privileged credentials are not exposed in the repository or APK.
+[ ] Permissions are requested only when needed.
+[ ] Basic unit and widget tests execute successfully.
+[ ] Setup, configuration, and build instructions are documented.
+
+A feature must not be marked complete merely because its screen exists.
+
+---
+
+## 12. REQUIRED DELIVERABLES
+
+Produce:
+1. A working Flutter Android project.
+2. A reusable UI design system.
+3. A feature-wise implementation plan.
+4. A documented database schema and migrations.
+5. API integration adapters and configuration instructions.
+6. A list of required API keys and the exact services that need them.
+7. Offline caching and fallback implementation.
+8. Security and privacy documentation.
+9. Unit, widget, and integration tests.
+10. A README in Bangla, with technical identifiers and commands preserved in English.
+11. An API provider comparison table covering cost, quotas, limitations, and attribution.
+12. A known-limitations document distinguishing working, simulated, and not-yet-integrated features.
+13. A release checklist for testing on a real Android device.
+14. A prioritized roadmap for future features.
+
+---
+
+## 13. IMPLEMENTATION WORKFLOW
+
+Follow these phases in order.
+
+PHASE 1 — INSPECTION AND PLANNING
+- Inspect the project and screenshot.
+- Identify the existing stack and constraints.
+- Create an inventory of current features.
+- Propose the architecture and implementation plan.
+- Identify API and data dependencies.
+
+PHASE 2 — DESIGN SYSTEM
+- Implement the color palette, typography, reusable cards, navigation, search, and dashboard.
+- Match the screenshot's clean, compact visual language.
+- Verify the layout on different screen sizes.
+
+PHASE 3 — WORKING MVP
+- Implement location selection, nearby-place search, weather, emergency contacts, service directory, and expense calculator.
+- Integrate available data providers.
+- Add civic reporting only when its persistence and security are configured.
+- Implement real loading, empty, error, and offline states.
+
+PHASE 4 — DATA AND SECURITY
+- Configure the database and access controls.
+- Implement caching, validation, audit logging, and secure configuration.
+- Verify that private information is protected.
+
+PHASE 5 — TESTING
+- Execute the build and available automated tests.
+- Test the application on an Android emulator or physical device.
+- Fix compile errors, runtime errors, layout defects, and integration problems.
+
+PHASE 6 — DOCUMENTATION AND RELEASE
+- Generate the setup guide.
+- Document required API keys and environment variables.
+- Record the tests actually executed and their results.
+- Prepare a debug APK and release instructions, where supported by the available build environment.
+
+Do not stop after generating mockups or boilerplate.
+
+After each phase, report:
+- Files created or modified.
+- Features actually implemented.
+- Tests actually run.
+- Errors or blockers.
+- Remaining tasks.
+
+Start by inspecting the project and preparing a concrete implementation plan. Then proceed with the highest-priority working MVP, keeping the application modular, secure, and easy to extend.
+
+৫. আমার চূড়ান্ত পরামর্শ
+প্রথম দিনেই ১২টি ফিচার চালু করার চেষ্টা করবেন না। বরং প্রথম সংস্করণে এমন কিছু দিন, যেগুলো মানুষ সত্যিই বারবার খুলবে।
+প্রথম ৩০ দিনের MVP পরিকল্পনা
+দিন ১–৭
+
+ডিজাইন ও ভিত্তি
+Home dashboard, Bangla UI, সার্চ, লোকেশন নির্বাচন এবং bottom navigation।
+
+
+
+দিন ৮–১৪
+
+ম্যাপ ও দৈনন্দিন তথ্য
+Nearby places, আবহাওয়া, জরুরি নম্বর এবং পাবলিক ট্রান্সপোর্ট ডিরেক্টরি।
+
+
+
+দিন ১৫–২১
+
+লোকাল ইউটিলিটি
+সার্ভিস প্রোভাইডার খোঁজা, বাজারের দাম এবং অফলাইন খরচের হিসাব।
+
+
+
+দিন ২২–৩০
+
+পরীক্ষা ও সীমিত লঞ্চ
+Civic reporting, নিরাপত্তা পরীক্ষা, ২০–৫০ জন বাস্তব ব্যবহারকারীর মতামত এবং বাগ সংশোধন।
+
+
+এটি একটি লক্ষ্যভিত্তিক পরিকল্পনা, নিশ্চিত ডেলিভারি সময় নয়। বাস্তব API, ডেটা সংগ্রহ, ব্যাকএন্ড ও টেস্টিংয়ের পরিমাণ অনুযায়ী সময় বাড়তে পারে।
+
+সবশেষে, আপনার অ্যাপের সবচেয়ে বড় পার্থক্য তৈরি করতে পারে “আমার এলাকার জন্য আজ কী দরকার?”—এই প্রশ্নের উত্তর এক জায়গায় দেওয়া। শুধু অনেকগুলো 
+আইকন থাকা নয়; সঠিক তথ্য, নির্ভরযোগ্য লোকাল ডেটা, দ্রুত কাজ এবং বাংলায় ব্যবহারযোগ্য অভিজ্ঞতাই এটিকে ঢাকাবাসীর দৈনন্দিন অ্যাপ বানাতে পারে।

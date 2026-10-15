@@ -1,0 +1,773 @@
+DhakaLife activation checklist
+
+Phase 0 — Existing app baseline
+- [ ] Repository ও current architecture inspect
+- [ ] Git status এবং baseline commit
+- [ ] Flutter doctor, dependencies, analyze, tests
+- [ ] Dashboard-এর working ও mock features নথিভুক্ত
+- [ ] PROJECT_CONTEXT.md তৈরি বা update
+
+Phase 1 — Live Weather
+- [ ] Open-Meteo API যাচাই
+- [ ] HTTP service ও typed model
+- [ ] Dashboard weather card সংযুক্ত
+- [ ] Loading/error/retry states
+- [ ] Unit tests ও Android build
+
+Phase 2 — News Ticker
+- [ ] Prothom Alo ও bdnews24-এর feed/API permission যাচাই
+- [ ] একটি approved source দিয়ে prototype
+- [ ] Headline ticker ও article links
+- [ ] Refresh/cache/duplicate handling
+- [ ] News source failure tests
+
+Phase 3 — Bangla Radio
+- [ ] বৈধ radio stream URLs সংগ্রহ
+- [ ] just_audio ও audio_service integration
+- [ ] Android foreground media service configuration
+- [ ] Notification ও lock-screen controls
+- [ ] Screen-off, network-loss ও audio-interruption tests
+
+Phase 4 — Map & Nearby
+- [ ] OSM map integration ও attribution
+- [ ] Nearby places query
+- [ ] Location permission ও manual location fallback
+- [ ] Loading/error/empty results
+- [ ] OSM usage policy ও rate-limit পরীক্ষা
+
+Phase 5 — Core Dhaka services
+- [ ] Emergency directory ও official links
+- [ ] Local services ও category search
+- [ ] Transport route prototype
+- [ ] সরকারি/জরুরি তথ্যের source verification
+- [ ] Bangla UI accessibility
+
+Phase 6 — Persistence & backend
+- [ ] Saved places ও preferences local storage
+- [ ] Reports/login/notifications-এর requirements নির্ধারণ
+- [ ] প্রয়োজনে Firebase বা Supabase নির্বাচন
+- [ ] Access control ও data validation
+- [ ] Backend integration tests
+
+Phase 7 — Release readiness
+- [ ] সব screen ও navigation regression test
+- [ ] Debug/release build ও real device testing
+- [ ] Privacy policy, attribution ও API terms review
+- [ ] Performance, accessibility ও error monitoring
+- [ ] Release checklist, README ও PROJECT_CONTEXT.md final update
+
+
+-----------------------------------------------------------------------------------------------------------
+
+# DhakaLife Android App — Full Activation To-Do Plan
+
+আপনার DhakaLife-কে এখন একটি কার্যকর Bangla-first Dhaka Super App হিসেবে চালু করার পরিকল্পনা সাজাই। আপনার নতুন দুটি ফিচারও মূল পরিকল্পনায় যুক্ত করছি:
+
+- Top Bangla News Ticker: প্রথম আলো ও bdnews24 বাংলা থেকে সাম্প্রতিক খবরের শিরোনাম স্ক্রল করবে। খবরের শিরোনামে চাপ দিলে সংশ্লিষ্ট সংবাদ খুলবে।
+- Free Bangla Radio: ব্যবহারকারী নিজে Radio চালু করলে স্ক্রিন বন্ধ থাকলেও রেডিও চলবে। ব্যবহারকারী Stop করলে বন্ধ হবে। Notification/lock screen থেকে playback control-ও থাকবে।
+
+মূল নিয়ম: আপনার বর্তমান UI ও project files অক্ষত রেখে ধাপে ধাপে feature চালু করব। একসঙ্গে সব feature বানিয়ে ফেলব না; প্রতিটি ধাপে test, documentation update এবং Git checkpoint থাকবে।
+
+## ১. News ticker: কীভাবে বাস্তবে চালু করবেন?
+
+[Prothom Alo Logo PNG Vector (AI) Free Download](https://images.openai.com/static-rsc-4/jMNWz_e3WH6KEQTOrXj8oOuLsS7hKCg7zXt8lQgPQD3SPzQLeeJqsBKiy5mhXzru738fESj-C1dBMtcY2hVVGVo3lOIz0Xq_0xKGS6hqDv31FUGEVopkXFUXN88nDJ-0vOV9uHuYJ7pTsVhzceD6U_Rrc3pkJp_agPA_r1qj2Nw?purpose=inline)
+
+প্রথম আলো
+
+আপনার দেওয়া e-paper link: [Prothom Alo e-paper](https://epaper.prothomalo.com/Home/)
+
+Ticker-এর জন্য e-paper interface scrape না করে অনুমোদিত RSS/API বা অন্য অনুমোদিত headline source ব্যবহার করুন। প্রথম আলোর terms-এ content ও intellectual property ব্যবহারের সীমাবদ্ধতা আছে।&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://www.prothomalo.com\&sz=32)
+
+প্রথম আলো
+
+
+
+[bdnews24.com News App - APK Download for Android | Aptoide](https://images.openai.com/static-rsc-4/AdtQJCCISUwIYaMu1pToOKNCt-PaNmgKX_qV5Z9A2k8ehog3OwpjpFa1JxMhOtOMeUWDyijV6gtVK4_llaxW06Cuv5OowiacmG7VvxdyAV7OjS1h0IfgRosls67e6Q8db_fFvzuou094OrVgOEpagmDCJqpdEOuTHP8BuKr7Cv0?purpose=inline)
+
+bdnews24 বাংলা
+
+Official website: [bdnews24 বাংলা](https://bangla.bdnews24.com/)
+
+সাইটে সাম্প্রতিক শিরোনাম দেখা যায়। Feed endpoint ও ব্যবহার-অনুমতি যাচাই করে তারপর ticker integration করবেন।&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://bangla.bdnews24.com\&sz=32)
+
+bdnews24.com
+
++1
+
+
+
+### News ticker-এর acceptance criteria
+
+- Dashboard-এর উপরের অংশে horizontal scrolling headline ticker।
+- একাধিক অনুমোদিত source নির্বাচন করার ব্যবস্থা।
+- প্রতিটি headline-এর সঙ্গে publisher/source name ও original article URL।
+- Headline-এ চাপ দিলে original article browser বা in-app browser-এ খুলবে।
+- Loading, no news, timeout ও network error-এর অবস্থা থাকবে।
+- Duplicate headline বাদ দেওয়া হবে।
+- Last successful fetch-এর data সীমিত সময় cache করা যাবে।
+- নির্দিষ্ট interval-এ refresh হবে; প্রতিটি scroll movement-এ নতুন request যাবে না।
+- Source unavailable হলে অ্যাপের বাকি অংশ চলবে।
+- কোনো paywall, login restriction বা anti-bot ব্যবস্থা bypass করা হবে না।
+- অনুমতি ছাড়া পূর্ণ article text বা ছবি কপি করে DhakaLife-এ দেখানো হবে না।
+
+প্রস্তাবিত fallback: যদি অনুমোদিত feed/API না পাওয়া যায়, প্রথম সংস্করণে source-এর নাম ও official website-এ যাওয়ার link দেখান। পরে অনুমোদিত feed বা licensed news provider যুক্ত করুন। ওয়েবসাইটের homepage থেকে সরাসরি scraping-কে production solution ধরে নেবেন না।
+
+## ২. Free Bangla Radio: screen off-এ playback
+
+Flutter-এ এই কাজের জন্য `just_audio`-এর সঙ্গে `audio_service` ব্যবহার করা একটি উপযুক্ত starting point। `audio_service` background playback, media notification, lock-screen controls এবং headset controls সমর্থন করে।&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://pub.dev\&sz=32)
+
+Dart API docs
+
+
+
+[Radio appliation night smartphone interface vector template](https://images.openai.com/static-rsc-4/NgYRzYNfOJ1jT27QfOkX_kF_3VDKWT7ewPLI7uTF1_Jk-JB5YSvhrk0mezqrldhHonCfIIuGXOHJgGANM3WkarzA7lrQ6eo-fJzB7TGzPjySNtr4stWeQ6DpdMEIQQy592gVo--LZ7JsftOz5_1MvAfAOqzYe32pZr0wmkUGB2auEQ3BEgkXcoCRRXmDxidp?purpose=inline)
+
+### DhakaLife Radio
+
+প্রস্তাবিত UI ও আচরণ
+
+Station নির্বাচন → Play → Screen off → Radio চলবে → Notification থেকে Pause/Stop।
+
+### Radio-এর গুরুত্বপূর্ণ requirements
+
+- প্রথমে ৩–৫টি যাচাইকৃত, বৈধভাবে ব্যবহারযোগ্য Bangla radio station দিয়ে শুরু।
+- Station name, logo (যদি ব্যবহারের অনুমতি থাকে), genre এবং live status।
+- Play/Pause/Stop ও station change।
+- Screen off বা app background-এ গেলেও playback চলবে।
+- Android media notification ও lock-screen controls।
+- Headphone unplug করলে playback pause করার উপযুক্ত আচরণ।
+- Incoming call বা অন্য audio interruption হলে playback সঠিকভাবে handle করা।
+- Network disconnect হলে error এবং retry।
+- ব্যবহারকারী Stop করলে background playback service বন্ধ হবে।
+- Stream URL বৈধ HTTPS বা provider-supported streaming URL হলে অগ্রাধিকার।
+
+Radio stream-এর ব্যাপারে সতর্কতা: “Free to listen” মানেই অন্য app-এ stream পুনঃপ্রচার বা embedded player হিসেবে ব্যবহার করার অনুমতি আছে—এমন নয়। প্রতিটি station-এর official stream URL, ব্যবহার-শর্ত ও পুনঃপ্রচার-সংক্রান্ত অনুমতি যাচাই করতে হবে। কোনো অনুমোদিত stream URL না পাওয়া পর্যন্ত placeholder station দিয়ে UI তৈরি করা যেতে পারে, কিন্তু সেটিকে real radio হিসেবে ঘোষণা করা যাবে না।
+
+## ৩. DhakaLife activation roadmap — সম্পূর্ণ To-Do
+
+এই roadmap-এ সব কাজের অগ্রাধিকার নির্ধারণ করা হলো। প্রতিটি phase-এর acceptance criteria পূরণ না হওয়া পর্যন্ত পরের phase শুরু করবেন না।
+
+## Project task tracker
+
+### 40/40
+
+### 0
+
+### Phase 0 — Existing app baseline
+
+প্রথমে
+
+Repository ও current architecture inspect
+
+Git status এবং baseline commit
+
+Flutter doctor, dependencies, analyze, tests
+
+Dashboard-এর working ও mock features নথিভুক্ত
+
+PROJECT_CONTEXT.md তৈরি বা update
+
+### 1
+
+### Phase 1 — Live Weather
+
+প্রথম API
+
+Open-Meteo API যাচাই
+
+HTTP service ও typed model
+
+Dashboard weather card সংযুক্ত
+
+Loading/error/retry states
+
+Unit tests ও Android build
+
+### 2
+
+### Phase 2 — News Ticker
+
+দ্বিতীয়
+
+Prothom Alo ও bdnews24-এর feed/API permission যাচাই
+
+একটি approved source দিয়ে prototype
+
+Headline ticker ও article links
+
+Refresh/cache/duplicate handling
+
+News source failure tests
+
+### 3
+
+### Phase 3 — Bangla Radio
+
+তৃতীয়
+
+বৈধ radio stream URLs সংগ্রহ
+
+just_audio ও audio_service integration
+
+Android foreground media service configuration
+
+Notification ও lock-screen controls
+
+Screen-off, network-loss ও audio-interruption tests
+
+### 4
+
+### Phase 4 — Map & Nearby
+
+চতুর্থ
+
+OSM map integration ও attribution
+
+Nearby places query
+
+Location permission ও manual location fallback
+
+Loading/error/empty results
+
+OSM usage policy ও rate-limit পরীক্ষা
+
+### 5
+
+### Phase 5 — Core Dhaka services
+
+পঞ্চম
+
+Emergency directory ও official links
+
+Local services ও category search
+
+Transport route prototype
+
+সরকারি/জরুরি তথ্যের source verification
+
+Bangla UI accessibility
+
+### 6
+
+### Phase 6 — Persistence & backend
+
+প্রয়োজন হলে
+
+Saved places ও preferences local storage
+
+Reports/login/notifications-এর requirements নির্ধারণ
+
+প্রয়োজনে Firebase বা Supabase নির্বাচন
+
+Access control ও data validation
+
+Backend integration tests
+
+### 7
+
+### Phase 7 — Release readiness
+
+শেষে
+
+সব screen ও navigation regression test
+
+Debug/release build ও real device testing
+
+Privacy policy, attribution ও API terms review
+
+Performance, accessibility ও error monitoring
+
+Release checklist, README ও PROJECT_CONTEXT.md final update
+
+&#x20;Copy full checklist
+
+এই tracker বর্তমান chat-এ checklist হিসেবে কাজ করে; এটি নিজে থেকে আপনার repository-তে progress save করে না। Antigravity-কে Git ও PROJECT_CONTEXT.md-এ অগ্রগতি লিখতে বলবেন।
+
+## ৪. Android radio-এর জন্য বিশেষ technical checks
+
+Radio background playback শুধু screen বন্ধ হওয়ার পর timer চালিয়ে রাখার বিষয় নয়। Android media playback service সঠিকভাবে configure করতে হবে।
+
+Antigravity-কে বলবেন:
+
+- `audio_service` ও `just_audio`-এর compatible versions যাচাই করতে।
+- Android manifest-এ প্রয়োজনীয় foreground-service ও media-playback declarations যোগ করতে।
+- Android version অনুযায়ী notification permission এবং media notification আচরণ পরীক্ষা করতে।
+- Audio handler দিয়ে play, pause, stop ও station switching implement করতে।
+- Background service চালু থাকলে ব্যবহারকারী যেন notification থেকে playback বন্ধ করতে পারেন।
+- Android battery optimization ও manufacturer-specific background restrictions-এর কারণে playback আচরণ বাস্তব device-এ পরীক্ষা করতে।
+- Service বা app process বন্ধ হলে কী হবে তা স্পষ্টভাবে নির্ধারণ করতে; ব্যবহারকারী Stop করার পর radio যেন নিজে থেকে আবার চালু না হয়।
+
+Official package documentation: [audio_service](https://pub.dev/packages/audio_service) এবং [just_audio](https://pub.dev/packages/just_audio)।
+
+## ৫. প্রতিটি phase-এর শেষে চালানোর commands
+
+```
+flutter pub get
+flutter analyze
+flutter test
+flutter build apk --debug
+git status --short
+git diff --check
+git diff
+```
+
+সব command-এর বাস্তব ফল নথিভুক্ত করুন। `flutter analyze`-এর পুরোনো error থাকলে সেটি আগে থেকে ছিল কি না তুলনা করুন। Build সফল হলেই radio বা news feature বাস্তবে কাজ করছে ধরে নেবেন না—সেগুলোর আলাদা functional test লাগবে।
+
+কাজ যাচাইয়ের পর:
+
+```
+git add .
+git commit -m "feat: add verified DhakaLife feature"
+```
+
+প্রতিটি feature-এর জন্য আলাদা অর্থপূর্ণ commit message ব্যবহার করুন। API keys, secrets, private configuration বা user data Git-এ commit করবেন না।
+
+## ৬. Antigravity-এর জন্য Master Activation Prompt
+
+
+
+================================================ prompt ====================================================================
+
+
+
+
+
+# DhakaLife — Full App Activation and Implementation Plan
+
+## 1. Current State
+
+- Project name: DhakaLife
+- Platform: Existing Flutter Android app
+- UI and project files: Already exist
+- Real API/backend: Not integrated yet
+- New requirements:
+  1. Scrolling Bangla news ticker using authorized news sources
+  2. Free-to-listen Bangla radio with screen-off/background playback
+  3. Real weather API
+  4. Map and nearby places
+  5. Gradual activation of remaining Dhaka utility features
+- Primary documentation file: Root `PROJECT_CONTEXT.md`
+
+## 2. Non-Negotiable Preservation Rules
+
+1. Inspect the actual repository before editing.
+2. Do not rewrite the app or replace its architecture.
+3. Do not delete working screens, features, routes, assets or databases.
+4. Do not remove existing mock features until their replacements pass testing.
+5. Preserve the current dashboard design wherever possible.
+6. Reuse the current state management, routing, theme and service conventions.
+7. Do not upgrade unrelated packages or SDKs unnecessarily.
+8. Preserve uncommitted user changes.
+9. Do not invent API endpoints, radio stream URLs, credentials or test results.
+10. Do not begin all phases in one large implementation.
+
+## 3. Mandatory Repository Inspection
+
+Inspect and report:
+- `pubspec.yaml`
+- `lib/main.dart`
+- All relevant `lib/` directories and screens
+- Existing models, services, networking and state management
+- Android manifest and Gradle configuration
+- Existing tests and assets
+- `.gitignore`, `README.md` and `PROJECT_CONTEXT.md`
+- Git branch, status and recent commits
+- Mock data and incomplete features
+
+Run and record, where supported:
+- `flutter --version`
+- `dart --version`
+- `flutter doctor -v`
+- `flutter pub get`
+- `flutter analyze`
+- `flutter test`
+- `flutter devices`
+
+Identify pre-existing problems separately from new problems.
+
+## 4. Implementation Order
+
+### Phase 0 — Baseline
+
+Document current functionality, existing mock data, architecture, commands and known issues. Create or update `PROJECT_CONTEXT.md`. Establish a safe Git checkpoint without overwriting user work.
+
+### Phase 1 — Live Weather
+
+Integrate Open-Meteo using its documented forecast endpoint:
+https://open-meteo.com/en/docs
+
+Initial coordinates:
+- Latitude: 23.8103
+- Longitude: 90.4125
+- Time zone: Asia/Dhaka
+
+Implement a typed model, networking service, timeout, HTTP validation, safe parsing, loading/error/retry UI and automated tests. Use the existing dashboard weather component. Do not request location permission in this phase.
+
+### Phase 2 — Bangla News Ticker
+
+Candidate sources:
+- https://epaper.prothomalo.com/Home/
+- https://bangla.bdnews24.com/
+
+Investigate official RSS feeds, documented APIs, licensing and source usage terms before implementation.
+
+Requirements:
+- Horizontal scrolling headlines in the upper dashboard area
+- Source/publisher attribution
+- Clickable original article links
+- Refresh and sensible caching
+- Duplicate filtering
+- Timeout, empty and error states
+- No duplicate polling for each animation frame
+- Preserve the app when a news source is unavailable
+
+Do not assume an e-paper homepage is a permitted news API. Do not bypass paywalls, authentication or anti-bot protections. Do not republish full article text, images or copyrighted content without permission.
+
+If an approved feed or API cannot be verified, implement a source-link fallback and document the blocker. Do not scrape production news pages without permission.
+
+### Phase 3 — Bangla Radio
+
+Investigate:
+- `just_audio`
+- `audio_service`
+- Compatibility with the project's current Flutter/Dart constraints
+- Android foreground media playback requirements
+- Required manifest declarations and Android version behavior
+- Media notification, lock-screen and headset controls
+
+Use only verified, authorized radio stream URLs. Never invent a working stream URL.
+
+Implement:
+- Station list and station selection
+- Play, pause and stop
+- Current station display
+- Background playback while the screen is off
+- Media notification and lock-screen controls
+- Network failure and retry
+- Audio interruptions and headphone removal behavior
+- Correct service shutdown when the user stops playback
+
+Use clearly labeled placeholder stations if valid stream URLs have not yet been verified. Do not claim that placeholder streams work.
+
+Test on a physical Android device, not only in a widget test or emulator.
+
+### Phase 4 — Map and Nearby Places
+
+Evaluate OpenStreetMap-based mapping and Overpass queries. Respect tile usage policies, attribution, rate limits, caching rules and provider terms. Add location permission only when needed and retain a manual-location fallback.
+
+### Phase 5 — Core Dhaka Features
+
+Prioritize verified emergency information, service discovery, transport-route prototypes and useful Bangla utilities. Clearly label informational data and provide source links. Never invent official contact details.
+
+### Phase 6 — Backend, Storage and Notifications
+
+Only introduce Firebase, Supabase or a custom backend when a demonstrated requirement needs it. Document costs, limitations, data model, access rules and privacy implications. Do not migrate or replace an existing database without explicit approval.
+
+### Phase 7 — Release Readiness
+
+Run regression tests, build the APK, test network failure and background behavior, review privacy/security, verify third-party attribution and document release steps.
+
+## 5. Testing Requirements
+
+For every implemented phase:
+- Add deterministic unit tests using mock responses where appropriate.
+- Add widget tests for loading, success, empty and error states.
+- Run `flutter analyze` and `flutter test`.
+- Run `flutter build apk --debug` when supported.
+- Verify the feature manually on Android.
+- Record exact commands, results and failures.
+- Do not report an unexecuted test as passing.
+
+For Radio specifically, verify screen-off playback, notification controls, lock-screen behavior, stream failure, network disconnection, audio interruption and explicit Stop behavior.
+
+For News specifically, verify source attribution, article navigation, unavailable feeds, duplicate headlines and permitted content usage.
+
+## 6. PROJECT_CONTEXT.md Maintenance
+
+After every phase, update the existing root `PROJECT_CONTEXT.md` without destroying valid earlier documentation.
+
+Maintain:
+- Current project status and active phase
+- Repository structure and architecture
+- Actual files changed and their purpose
+- Dependencies and API sources
+- Data flow and configuration
+- Permissions and platform-specific requirements
+- API limitations and licensing considerations
+- Test/build commands and actual results
+- Known issues and unresolved decisions
+- Git checkpoint/commit when verified
+- Date-stamped changelog
+- Exact next task
+
+Separate verified facts, assumptions and planned work.
+
+## 7. Workflow and Approval Gates
+
+For each phase:
+1. Inspect.
+2. Propose the minimal file changes.
+3. Implement only the current phase.
+4. Run tests and inspect the diff.
+5. Update `PROJECT_CONTEXT.md`.
+6. Report what passed, failed or remains blocked.
+7. Stop and wait for review before starting the next phase.
+
+Do not silently proceed to later phases.
+
+## 8. First Task
+
+Start with Phase 0 only. Inspect the real repository and provide:
+- Existing architecture summary
+- Files relevant to weather, news and radio
+- Current dependencies and constraints
+- Baseline test/build results
+- Proposed Phase 1 changes
+- Existing documentation gaps
+
+Do not implement news or radio before the baseline inspection and Phase 1 plan are reviewed.
+
+
+
+
+
+
+
+
+
+=================================================================================================================
+
+
+
+
+
+
+
+
+
+এই prompt-টি আপনার বিদ্যমান DhakaLife repository-তে দিন। এতে Weather, News Ticker, Radio এবং পরবর্তী features-এর কাজ একত্রে পরিকল্পিত হবে, কিন্তু implementation phase অনুযায়ী সীমিত থাকবে।
+
+# DhakaLife — Full App Activation and Implementation Plan
+
+## 1. Current State
+
+- Project name: DhakaLife
+- Platform: Existing Flutter Android app
+- UI and project files: Already exist
+- Real API/backend: Not integrated yet
+- New requirements:
+  1. Scrolling Bangla news ticker using authorized news sources
+  2. Free-to-listen Bangla radio with screen-off/background playback
+  3. Real weather API
+  4. Map and nearby places
+  5. Gradual activation of remaining Dhaka utility features
+- Primary documentation file: Root `PROJECT_CONTEXT.md`
+
+## 2. Non-Negotiable Preservation Rules
+
+1. Inspect the actual repository before editing.
+2. Do not rewrite the app or replace its architecture.
+3. Do not delete working screens, features, routes, assets or databases.
+4. Do not remove existing mock features until their replacements pass testing.
+5. Preserve the current dashboard design wherever possible.
+6. Reuse the current state management, routing, theme and service conventions.
+7. Do not upgrade unrelated packages or SDKs unnecessarily.
+8. Preserve uncommitted user changes.
+9. Do not invent API endpoints, radio stream URLs, credentials or test results.
+10. Do not begin all phases in one large implementation.
+
+## 3. Mandatory Repository Inspection
+
+Inspect and report:
+
+- `pubspec.yaml`
+- `lib/main.dart`
+- All relevant `lib/` directories and screens
+- Existing models, services, networking and state management
+- Android manifest and Gradle configuration
+- Existing tests and assets
+- `.gitignore`, `README.md` and `PROJECT_CONTEXT.md`
+- Git branch, status and recent commits
+- Mock data and incomplete features
+
+Run and record, where supported:
+
+- `flutter --version`
+- `dart --version`
+- `flutter doctor -v`
+- `flutter pub get`
+- `flutter analyze`
+- `flutter test`
+- `flutter devices`
+
+Identify pre-existing problems separately from new problems.
+
+## 4. Implementation Order
+
+### Phase 0 — Baseline
+
+Document current functionality, existing mock data, architecture, commands and known issues. Create or update `PROJECT_CONTEXT.md`. Establish a safe Git checkpoint without overwriting user work.
+
+### Phase 1 — Live Weather
+
+Integrate Open-Meteo using its documented forecast endpoint:\
+[https://open-meteo.com/en/docs](https://open-meteo.com/en/docs)
+
+Initial coordinates:
+
+- Latitude: 23.8103
+- Longitude: 90.4125
+- Time zone: Asia/Dhaka
+
+Implement a typed model, networking service, timeout, HTTP validation, safe parsing, loading/error/retry UI and automated tests. Use the existing dashboard weather component. Do not request location permission in this phase.
+
+### Phase 2 — Bangla News Ticker
+
+Candidate sources:
+
+- [https://epaper.prothomalo.com/Home/](https://epaper.prothomalo.com/Home/)
+- [https://bangla.bdnews24.com/](https://bangla.bdnews24.com/)
+
+Investigate official RSS feeds, documented APIs, licensing and source usage terms before implementation.
+
+Requirements:
+
+- Horizontal scrolling headlines in the upper dashboard area
+- Source/publisher attribution
+- Clickable original article links
+- Refresh and sensible caching
+- Duplicate filtering
+- Timeout, empty and error states
+- No duplicate polling for each animation frame
+- Preserve the app when a news source is unavailable
+
+Do not assume an e-paper homepage is a permitted news API. Do not bypass paywalls, authentication or anti-bot protections. Do not republish full article text, images or copyrighted content without permission.
+
+If an approved feed or API cannot be verified, implement a source-link fallback and document the blocker. Do not scrape production news pages without permission.
+
+### Phase 3 — Bangla Radio
+
+Investigate:
+
+- `just_audio`
+- `audio_service`
+- Compatibility with the project's current Flutter/Dart constraints
+- Android foreground media playback requirements
+- Required manifest declarations and Android version behavior
+- Media notification, lock-screen and headset controls
+
+Use only verified, authorized radio stream URLs. Never invent a working stream URL.
+
+Implement:
+
+- Station list and station selection
+- Play, pause and stop
+- Current station display
+- Background playback while the screen is off
+- Media notification and lock-screen controls
+- Network failure and retry
+- Audio interruptions and headphone removal behavior
+- Correct service shutdown when the user stops playback
+
+Use clearly labeled placeholder stations if valid stream URLs have not yet been verified. Do not claim that placeholder streams work.
+
+Test on a physical Android device, not only in a widget test or emulator.
+
+### Phase 4 — Map and Nearby Places
+
+Evaluate OpenStreetMap-based mapping and Overpass queries. Respect tile usage policies, attribution, rate limits, caching rules and provider terms. Add location permission only when needed and retain a manual-location fallback.
+
+### Phase 5 — Core Dhaka Features
+
+Prioritize verified emergency information, service discovery, transport-route prototypes and useful Bangla utilities. Clearly label informational data and provide source links. Never invent official contact details.
+
+### Phase 6 — Backend, Storage and Notifications
+
+Only introduce Firebase, Supabase or a custom backend when a demonstrated requirement needs it. Document costs, limitations, data model, access rules and privacy implications. Do not migrate or replace an existing database without explicit approval.
+
+### Phase 7 — Release Readiness
+
+Run regression tests, build the APK, test network failure and background behavior, review privacy/security, verify third-party attribution and document release steps.
+
+## 5. Testing Requirements
+
+For every implemented phase:
+
+- Add deterministic unit tests using mock responses where appropriate.
+- Add widget tests for loading, success, empty and error states.
+- Run `flutter analyze` and `flutter test`.
+- Run `flutter build apk --debug` when supported.
+- Verify the feature manually on Android.
+- Record exact commands, results and failures.
+- Do not report an unexecuted test as passing.
+
+For Radio specifically, verify screen-off playback, notification controls, lock-screen behavior, stream failure, network disconnection, audio interruption and explicit Stop behavior.
+
+For News specifically, verify source attribution, article navigation, unavailable feeds, duplicate headlines and permitted content usage.
+
+## 6. PROJECT_CONTEXT.md Maintenance
+
+After every phase, update the existing root `PROJECT_CONTEXT.md` without destroying valid earlier documentation.
+
+Maintain:
+
+- Current project status and active phase
+- Repository structure and architecture
+- Actual files changed and their purpose
+- Dependencies and API sources
+- Data flow and configuration
+- Permissions and platform-specific requirements
+- API limitations and licensing considerations
+- Test/build commands and actual results
+- Known issues and unresolved decisions
+- Git checkpoint/commit when verified
+- Date-stamped changelog
+- Exact next task
+
+Separate verified facts, assumptions and planned work.
+
+## 7. Workflow and Approval Gates
+
+For each phase:
+
+1. Inspect.
+2. Propose the minimal file changes.
+3. Implement only the current phase.
+4. Run tests and inspect the diff.
+5. Update `PROJECT_CONTEXT.md`.
+6. Report what passed, failed or remains blocked.
+7. Stop and wait for review before starting the next phase.
+
+Do not silently proceed to later phases.
+
+## 8. First Task
+
+Start with Phase 0 only. Inspect the real repository and provide:
+
+- Existing architecture summary
+- Files relevant to weather, news and radio
+- Current dependencies and constraints
+- Baseline test/build results
+- Proposed Phase 1 changes
+- Existing documentation gaps
+
+Do not implement news or radio before the baseline inspection and Phase 1 plan are reviewed.
+
+
+
+
+## ৭. এখন ঠিক কোন কাজটি করবেন?
+
+1. Antigravity-তে আপনার DhakaLife project খুলুন।
+2. Master Activation Prompt দিন।
+3. প্রথমে শুধু Phase 0 inspection সম্পন্ন করান।
+4. `PROJECT_CONTEXT.md` ও baseline test results যাচাই করুন।
+5. তারপর Weather → News Ticker → Radio এই ক্রমে কাজ শুরু করুন।
+
+একটি শেষ কথা: News ticker-এর অনুমোদিত data source এবং Radio-এর বৈধ stream URL—এই দুটোই গুরুত্বপূর্ণ dependency। এগুলো যাচাই না করে UI তৈরি করা যায়, কিন্তু feature-কে পুরোপুরি সক্রিয় বলা যাবে না।

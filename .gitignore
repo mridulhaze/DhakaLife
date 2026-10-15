@@ -45,6 +45,8 @@ local.properties
 # Credentials & secrets
 credentials.json
 **/credentials.json
+dialog_flow_auth.json
+**/dialog_flow_auth.json
 private_keys/
 
 # Office temporary/lock files
