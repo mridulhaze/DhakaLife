@@ -791,3 +791,45 @@ This file is the single source of truth for the project. Update it whenever:
   - Tree-shaken font and icon assets: MaterialIcons (-98.8%), Phosphor (-97.6%).
   - Clean uninstallation of debug instance and fresh installation of `app-release.apk` on Genymotion emulator (`192.168.246.103:5555`).
   - Verified initial launch, ambient sky time-of-day rendering, live Open-Meteo weather, rolling Bangla RSS news ticker, service grid cards, and navigation tabs (`screen_release_home.png`).
+
+---
+
+## 32. Firebase Locations & Tour Bill Search Feature (Completed)
+
+### Architecture & Implementation Summary
+1. **Firestore Data Model (`NuLocationItem` - `lib/models/nu_location_model.dart`):**
+   - Matches the data structure from `lib/views/bill_locations.dart`:
+     - `places` (String): e.g. "Amtali", "Barguna Sadar", "Barishal Sadar".
+     - `district` (String): e.g. "Barguna", "Barishal", "Bhola".
+     - `gazipurSadarKm` (int): Distance from Gazipur Sadar in kilometers.
+     - `cat1Grade1Bill` (int): Category 1 Grade 1 tour bill in BDT.
+     - `cat1Grade2To3Bill` (int): Category 1 Grade 2-3 tour bill in BDT.
+     - `cat1Grade4To5Bill` (int): Category 1 Grade 4-5 tour bill in BDT.
+     - `cat2Grade6To7Bill` (int): Category 2 Grade 6-7 tour bill in BDT.
+     - `cat2Grade8To10Bill` (int): Category 2 Grade 8-10 tour bill in BDT.
+     - `imageUrl` (String): Location/district header image URL.
+   - Includes resilient number/string parsers (`_parseInt`), `fromFirestore`, `fromMap`, `toMap`, and `toJson`.
+
+2. **Service Layer & Caching (`NuLocationService` - `lib/services/nu_location_service.dart`):**
+   - Implements a cache-first offline architecture using `SharedPreferences` key `cached_nu_locations_v1`.
+   - On initialization or refresh, attempts to query Cloud Firestore collection `locations`.
+   - If Firestore collection is empty or credentials are not yet provisioned in a test environment, transparently seeds the complete baseline dataset and saves it to local cache.
+   - Provides reactive observables: `locations`, `filteredLocations`, `isLoading`, `isFromCache`, and `lastSynced`.
+   - Provides live search filtering (`searchLocations(query)`) matching places and districts case-insensitively.
+
+3. **Search & Location UI (`lib/views/bill_locations.dart`):**
+   - Fixed pre-existing crash: Uninitialized `late AnimationController _controller;` was throwing `LateInitializationError` on dispose.
+   - Fixed data key typos: Corrected misspelled keys (`Catagory_1_grade_1_bill` vs `Cat_1_grade_1_bill`) and removed illegal nested quotation marks from image URLs.
+   - Added real-time search field with clear ('X') button.
+   - Added cloud sync indicator pill: Displays "ফায়ারবেস লাইভ" or "অফলাইন ক্যাশড".
+   - Integrated full Tour Bill details bottom sheet displaying complete allowance breakdown across all 5 grade categories with styled currency badges and a dismissal action button.
+   - Updated Sub-Card 1 ("লোকেশন ও দূরত্ব") in `NuServicesScreen` (`lib/views/nu_services_screen.dart`) to directly open `UserListScreen` from `bill_locations.dart`.
+
+4. **Automated & Emulator Verification:**
+   - **Unit Tests:** Added `test/nu_location_test.dart` covering model serialization, JSON parsing, fallback parsing, dataset integrity, and search filtering. **All 21 tests pass (`21/21 passed`)**.
+   - **Emulator Verification (Genymotion Android 15 `192.168.246.103:5555`):**
+     - Screen launch verified: `screen_locations_opened.png` showing all 12 locations and cloud sync status pill.
+     - Search filter verified: `screen_locations_searched.png` searching "Barishal" narrowing results to 1 item in real-time.
+     - Modal bottom sheet verified: `screen_locations_modal_opened.png` displaying Barishal Sadar (225 km) with grade-by-grade breakdown.
+     - Search clear verified: `screen_locations_cleared.png` restoring the full list upon tapping clear.
+     - Back navigation verified: `screen_back_hub.png` returning cleanly to NU Hub without errors.

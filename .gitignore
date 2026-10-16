@@ -52,3 +52,6 @@ private_keys/
 # Office temporary/lock files
 ~$*
 **/~$*
+
+# Local user data directories
+DATA/

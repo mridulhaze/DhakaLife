@@ -8,7 +8,7 @@ import 'package:flutter_project_nutcm_1/services/dhaka_data_service.dart';
 import 'package:flutter_project_nutcm_1/views/collegesLists.dart';
 import 'package:flutter_project_nutcm_1/views/employee.dart';
 import 'package:flutter_project_nutcm_1/views/notices.dart';
-import 'package:flutter_project_nutcm_1/views/user_list.dart';
+import 'package:flutter_project_nutcm_1/views/bill_locations.dart';
 
 class NuServicesScreen extends StatefulWidget {
   const NuServicesScreen({Key? key}) : super(key: key);
