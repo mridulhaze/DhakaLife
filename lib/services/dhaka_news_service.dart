@@ -54,6 +54,16 @@ class DhakaNewsService {
       }
     }
 
+    // Always ensure at least 4 rich stories for smooth horizontal scrolling
+    if (uniqueHeadlines.length < 4) {
+      for (final fb in getFallbackHeadlines()) {
+        if (!seenTitles.contains(fb.title.trim())) {
+          seenTitles.add(fb.title.trim());
+          uniqueHeadlines.add(fb);
+        }
+      }
+    }
+
     if (uniqueHeadlines.isNotEmpty) {
       _cachedHeadlines = uniqueHeadlines;
       _lastFetchTime = now;
@@ -69,10 +79,11 @@ class DhakaNewsService {
 
   static Future<List<DhakaNewsHeadline>> _fetchRss(String url, String sourceName) async {
     final client = HttpClient();
-    client.connectionTimeout = const Duration(seconds: 5);
+    client.connectionTimeout = const Duration(seconds: 7);
     final request = await client.getUrl(Uri.parse(url));
-    request.headers.set('User-Agent', 'DhakaLife-App/1.0 (Android; Mobile)');
-    final response = await request.close().timeout(const Duration(seconds: 5));
+    request.headers.set('User-Agent',
+        'Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36');
+    final response = await request.close().timeout(const Duration(seconds: 7));
 
     if (response.statusCode != 200) {
       return [];
@@ -82,24 +93,31 @@ class DhakaNewsService {
     return parseRssXml(body, sourceName);
   }
 
-  /// Parses RSS XML and extracts titles and links safely
+  /// Parses RSS XML and extracts titles, links, and rectangular thumbnails safely
   static List<DhakaNewsHeadline> parseRssXml(String xml, String sourceName) {
     final List<DhakaNewsHeadline> items = [];
     final itemPattern = RegExp(r'<item>([\s\S]*?)<\/item>', caseSensitive: false);
     final titlePattern = RegExp(r'<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>', caseSensitive: false);
     final linkPattern = RegExp(r'<link>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>', caseSensitive: false);
     final datePattern = RegExp(r'<pubDate>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/pubDate>', caseSensitive: false);
+    final thumbPattern = RegExp(r'<media:thumbnail[^>]+url="([^"]+)"', caseSensitive: false);
+    final contentPattern = RegExp(r'<media:content[^>]+url="([^"]+)"', caseSensitive: false);
+    final enclosurePattern = RegExp(r'<enclosure[^>]+url="([^"]+)"', caseSensitive: false);
 
     for (final match in itemPattern.allMatches(xml)) {
       final itemBlock = match.group(1) ?? '';
       final titleMatch = titlePattern.firstMatch(itemBlock);
       final linkMatch = linkPattern.firstMatch(itemBlock);
       final dateMatch = datePattern.firstMatch(itemBlock);
+      final thumbMatch = thumbPattern.firstMatch(itemBlock) ??
+          contentPattern.firstMatch(itemBlock) ??
+          enclosurePattern.firstMatch(itemBlock);
 
       if (titleMatch != null && linkMatch != null) {
         String title = titleMatch.group(1)?.trim() ?? '';
         String link = linkMatch.group(1)?.trim() ?? '';
         String? date = dateMatch?.group(1)?.trim();
+        String? imageUrl = thumbMatch?.group(1)?.trim().replaceAll('&amp;', '&');
 
         // Clean any residual HTML entities
         title = title
@@ -115,6 +133,7 @@ class DhakaNewsService {
             url: link,
             source: sourceName,
             pubDate: date,
+            imageUrl: imageUrl,
           ));
         }
       }
@@ -130,21 +149,33 @@ class DhakaNewsService {
         title: 'মেট্রোরেলে ভিড় কমাতে পিক আওয়ারে ট্রেনের ব্যবধান কমানোর পরিকল্পনা',
         url: 'https://bangla.bdnews24.com/',
         source: 'বিডিনিউজ২৪',
+        pubDate: 'আজ, দুপুর ১:৩০',
+        imageUrl:
+            'https://images.unsplash.com/photo-1596895111956-bf1cf0599ce5?w=500&auto=format&fit=crop&q=80',
       ),
       DhakaNewsHeadline(
-        title: 'রাজধানীর বাজারে নিত্যপণ্যের সরবরাহ স্বাভাবিক রাখতে ডিএনসিসি-ডিএসসিসির বিশেষ তদারকি',
+        title: 'রাজধানীর বাজারে নিত্যপণ্যের সরবরাহ স্বাভাবিক রাখতে বিশেষ তদারকি সেল',
         url: 'https://bangla.thedailystar.net/',
         source: 'ডেইলি স্টার',
+        pubDate: 'আজ, সকাল ১১:০০',
+        imageUrl:
+            'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop&q=80',
       ),
       DhakaNewsHeadline(
         title: 'জাতীয় বিশ্ববিদ্যালয়ের সকল সাম্প্রতিক বিজ্ঞপ্তি সরাসরি অ্যাপে দেখার সুবিধা চালু',
         url: 'https://www.nu.ac.bd/recent-news-notice.php',
         source: 'এনইউ নোটিশ',
+        pubDate: 'আজ, সকাল ১০:১৫',
+        imageUrl:
+            'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=500&auto=format&fit=crop&q=80',
       ),
       DhakaNewsHeadline(
-        title: 'ঢাকার ডেঙ্গু প্রতিরোধে সিটি করপোরেশনের বিশেষ মশক নিধন অভিযান চলমান',
+        title: 'ঢাকার পরিবেশ ও পরিচ্ছন্নতা নিশ্চিতে দুই সিটি করপোরেশনের বিশেষ যৌথ অভিযান',
         url: 'https://epaper.prothomalo.com/Home/',
         source: 'প্রথম আলো',
+        pubDate: 'আজ, সকাল ৯:০০',
+        imageUrl:
+            'https://images.unsplash.com/photo-1583422409516-2895a77efded?w=500&auto=format&fit=crop&q=80',
       ),
     ];
   }

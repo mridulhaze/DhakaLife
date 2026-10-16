@@ -357,9 +357,14 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
             // DYNAMIC TIME-AWARE BANNER (Lite Orange Sunrise / Noon / Sunset / Night Animation)
             _buildTimeAwareBanner(),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
 
-            // LIVE BANGLA NEWS TICKER (BBC Bangla & The Daily Star)
+            // CLEAN QUICK ACCESS SERVICES (Emergency 999, Metro, Bazar, NU Hub)
+            _buildQuickServiceBar(),
+
+            const SizedBox(height: 14),
+
+            // EYE-CATCHING BANGLA NEWS CAROUSEL (with 16:9 rectangular photos & clickable links)
             const DhakaNewsTicker(),
 
             const SizedBox(height: 16),
@@ -534,13 +539,13 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
     );
   }
 
-  // DYNAMIC TIME-AWARE BANNER (Morning, Noon, Night Landscape Images)
+  // DYNAMIC TIME-AWARE AMBIENT WEATHER BANNER (Simple, Clean & Uncluttered)
   Widget _buildTimeAwareBanner() {
     final now = DateTime.now();
     final hour = now.hour;
 
-    final temp = _weatherSummary?['temperature'] ?? '29°C';
-    final cond = _weatherSummary?['conditionBn'] ?? 'আংশিক মেঘলা';
+    final temp = _weatherSummary?['temperature'] ?? '31°C';
+    final cond = _weatherSummary?['conditionBn'] ?? 'পরিষ্কার আকাশ';
 
     String bgImage;
     String greetingBn;
@@ -551,59 +556,57 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
     if (hour >= 5 && hour < 12) {
       // 🌅 MORNING (5am - 12pm)
       bgImage = 'assets/images/dashboard_top/morning.jpeg';
-      greetingBn = 'সুপ্রভাত ঢাকা • সকালের আবহাওয়া';
+      greetingBn = 'সুপ্রভাত ঢাকা';
       timeIcon = PhosphorIcons.sunHorizon(PhosphorIconsStyle.fill);
       iconColor = const Color(0xFFFFB74D);
       overlayGradient = [
-        Colors.black.withOpacity(0.55),
+        Colors.black.withOpacity(0.50),
         Colors.black.withOpacity(0.35),
-        Colors.black.withOpacity(0.65),
+        Colors.black.withOpacity(0.60),
       ];
     } else if (hour >= 12 && hour < 17) {
       // ☀️ NOON (12pm - 5pm)
       bgImage = 'assets/images/dashboard_top/noon.jpeg';
-      greetingBn = 'শুভ দুপুর ঢাকা • বর্তমান তাপমাত্রা';
+      greetingBn = 'শুভ দুপুর ঢাকা';
       timeIcon = PhosphorIcons.sun(PhosphorIconsStyle.fill);
       iconColor = const Color(0xFFFFD54F);
       overlayGradient = [
         Colors.black.withOpacity(0.50),
         Colors.black.withOpacity(0.30),
-        Colors.black.withOpacity(0.65),
+        Colors.black.withOpacity(0.60),
       ];
     } else {
       // 🌙 NIGHT (5pm - 5am)
       bgImage = 'assets/images/dashboard_top/night.jpeg';
-      greetingBn = (hour >= 17 && hour < 20)
-          ? 'শুভ সন্ধ্যা ঢাকা • গোধূলি পূর্বাভাস'
-          : 'শুভ রাত্রি ঢাকা • রাতের আবহাওয়া';
+      greetingBn = (hour >= 17 && hour < 20) ? 'শুভ সন্ধ্যা ঢাকা' : 'শুভ রাত্রি ঢাকা';
       timeIcon = (hour >= 17 && hour < 20)
           ? PhosphorIcons.sunHorizon(PhosphorIconsStyle.fill)
           : PhosphorIcons.moonStars(PhosphorIconsStyle.fill);
       iconColor = const Color(0xFFFFD54F);
       overlayGradient = [
-        Colors.black.withOpacity(0.65),
+        Colors.black.withOpacity(0.60),
         Colors.black.withOpacity(0.40),
-        Colors.black.withOpacity(0.75),
+        Colors.black.withOpacity(0.70),
       ];
     }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.18),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(20),
         child: Stack(
           children: [
-            // Background Image
+            // Background Landscape Image
             Positioned.fill(
               child: Image.asset(
                 bgImage,
@@ -631,148 +634,124 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
                 ),
               ),
             ),
-            // Banner Content
-            Padding(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                children: [
-                  Row(
+            // Banner Hero Weather Content
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const DhakaWeatherScreen(),
+                    ),
+                  );
+                },
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const DhakaWeatherScreen(),
-                            ),
-                          );
-                        },
-                        child: Row(
-                          children: [
-                            ScaleTransition(
-                              scale: _sunPulseAnimation,
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.25),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Icon(timeIcon, color: iconColor, size: 22),
+                      // Left: Greeting & Current Live Weather
+                      Row(
+                        children: [
+                          ScaleTransition(
+                            scale: _sunPulseAnimation,
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.25),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                    color: Colors.white.withOpacity(0.3)),
                               ),
+                              child: Icon(timeIcon, color: iconColor, size: 24),
                             ),
-                            const SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  greetingBn,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    shadows: [
-                                      Shadow(color: Colors.black54, blurRadius: 4),
-                                    ],
-                                  ),
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                greetingBn,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  shadows: [
+                                    Shadow(color: Colors.black54, blurRadius: 4),
+                                  ],
                                 ),
-                                Text(
-                                  'ঢাকা: $temp • $cond',
-                                  style: const TextStyle(
-                                    color: Color(0xFFE2E8F0),
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w600,
-                                    shadows: [
-                                      Shadow(color: Colors.black54, blurRadius: 4),
-                                    ],
+                              ),
+                              const SizedBox(height: 3),
+                              Row(
+                                children: [
+                                  Text(
+                                    'ঢাকা: $temp',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      shadows: [
+                                        Shadow(color: Colors.black54, blurRadius: 4),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 7, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.22),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      cond,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
+
+                      // Right: Clickable Weather Forecast Pill
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.35),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.white.withOpacity(0.3)),
+                          color: Colors.white.withOpacity(0.22),
+                          borderRadius: BorderRadius.circular(16),
+                          border:
+                              Border.all(color: Colors.white.withOpacity(0.35)),
                         ),
                         child: Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 3.5,
-                              backgroundColor: iconColor,
-                            ),
-                            const SizedBox(width: 5),
-                            const Text(
-                              'লাইভ সময়',
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Text(
+                              'পূর্বাভাস',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 10.5,
+                                fontSize: 11,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+                            SizedBox(width: 3),
+                            Icon(Icons.arrow_forward_ios_rounded,
+                                color: Colors.white, size: 10),
                           ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-
-                  // 4 Main Quick Action Buttons on Banner
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildFeaturedAction(
-                        icon: PhosphorIcons.phoneCall(PhosphorIconsStyle.fill),
-                        label: 'জরুরি ৯৯৯',
-                        iconColor: const Color(0xFFEF4444),
-                        textColor: Colors.white,
-                        bgColor: Colors.white.withOpacity(0.95),
-                        onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const DhakaEmergencyScreen())),
-                      ),
-                      _buildFeaturedAction(
-                        icon: PhosphorIcons.train(PhosphorIconsStyle.fill),
-                        label: 'মেট্রোরেল',
-                        iconColor: const Color(0xFF059669),
-                        textColor: Colors.white,
-                        bgColor: Colors.white.withOpacity(0.95),
-                        onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const DhakaBusMetroScreen())),
-                      ),
-                      _buildFeaturedAction(
-                        icon: PhosphorIcons.shoppingBag(PhosphorIconsStyle.fill),
-                        label: 'বাজার দর',
-                        iconColor: const Color(0xFFD97706),
-                        textColor: Colors.white,
-                        bgColor: Colors.white.withOpacity(0.95),
-                        onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const DhakaBazarScreen())),
-                      ),
-                      _buildFeaturedAction(
-                        icon: PhosphorIcons.graduationCap(PhosphorIconsStyle.fill),
-                        label: 'এনইউ হাব',
-                        iconColor: const Color(0xFF7C3AED),
-                        textColor: Colors.white,
-                        bgColor: Colors.white.withOpacity(0.95),
-                        onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const NuServicesScreen())),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ),
           ],
@@ -781,47 +760,108 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
     );
   }
 
-  Widget _buildFeaturedAction({
+  // DEDICATED CLEAN QUICK SERVICE BAR (Zero Noise, Airy, Professional)
+  Widget _buildQuickServiceBar() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildQuickServiceItem(
+            icon: PhosphorIcons.phoneCall(PhosphorIconsStyle.fill),
+            label: 'জরুরি ৯৯৯',
+            iconColor: const Color(0xFFDC2626),
+            bgColor: const Color(0xFFFEE2E2),
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const DhakaEmergencyScreen())),
+          ),
+          _buildQuickServiceItem(
+            icon: PhosphorIcons.train(PhosphorIconsStyle.fill),
+            label: 'মেট্রোরেল',
+            iconColor: const Color(0xFF059669),
+            bgColor: const Color(0xFFD1FAE5),
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const DhakaBusMetroScreen())),
+          ),
+          _buildQuickServiceItem(
+            icon: PhosphorIcons.shoppingBag(PhosphorIconsStyle.fill),
+            label: 'বাজার দর',
+            iconColor: const Color(0xFFD97706),
+            bgColor: const Color(0xFFFEF3C7),
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const DhakaBazarScreen())),
+          ),
+          _buildQuickServiceItem(
+            icon: PhosphorIcons.graduationCap(PhosphorIconsStyle.fill),
+            label: 'এনইউ হাব',
+            iconColor: const Color(0xFF7C3AED),
+            bgColor: const Color(0xFFEDE9FE),
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const NuServicesScreen())),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickServiceItem({
     required IconData icon,
     required String label,
     required Color iconColor,
-    required Color textColor,
     required Color bgColor,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(13),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Center(
+                child: Icon(icon, color: iconColor, size: 26),
+              ),
             ),
-            child: Icon(icon, color: iconColor, size: 26),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: TextStyle(
-              color: textColor,
-              fontSize: 11.5,
-              fontWeight: FontWeight.bold,
-              shadows: const [
-                Shadow(color: Colors.black87, blurRadius: 4),
-              ],
+            const SizedBox(height: 7),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

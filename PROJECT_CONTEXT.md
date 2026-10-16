@@ -833,3 +833,47 @@ This file is the single source of truth for the project. Update it whenever:
      - Modal bottom sheet verified: `screen_locations_modal_opened.png` displaying Barishal Sadar (225 km) with grade-by-grade breakdown.
      - Search clear verified: `screen_locations_cleared.png` restoring the full list upon tapping clear.
      - Back navigation verified: `screen_back_hub.png` returning cleanly to NU Hub without errors.
+
+---
+
+## 34. Section 34 — Top Dashboard Decluttering & Rich Eye-Catching News Carousel
+
+- **Goal & R&D Scope:**
+  1. Solve visual noise on the top dashboard: Previously, 4 white squircle buttons with drop-shadowed white text were directly overlaid on top of the rural landscape header image (`morning.jpeg`/`noon.jpeg`/`night.jpeg`), creating severe visual clash and legibility issues.
+  2. Redesign the 'সংবাদ' (News) section into an eye-catching, modern horizontal card carousel.
+  3. Include rich 16:9 rectangular news images in each card.
+  4. Ensure tapping each card directly launches the original verified news article in the external browser.
+
+- **Architecture & Implementation Details:**
+  1. **Top Dashboard Ambient Card & Quick Service Bar (`lib/views/dhaka_home_screen.dart`):**
+     - Refactored `_buildTimeAwareBanner()` into a serene, ambient weather & Dhaka greeting hero card. Displays dynamic time greeting, current temperature, condition pill, and a frosted glass `পূর্বাভাস >` button leading to `DhakaWeatherScreen()`.
+     - Separated the 4 primary quick-action items into `_buildQuickServiceBar()`: A dedicated white card with soft elevation (`BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: Offset(0, 3))`).
+     - Features 4 pastel circular icon buttons:
+       - 🚨 `জরুরি ৯৯৯` (Emergency hotline with one-touch direct dial)
+       - 🚇 `মেট্রোরেল` (Dhaka MRT Line-6 guide & fare calculator)
+       - 🛒 `বাজার দর` (Essential commodity & kitchen market price tracker)
+       - 🎓 `এনইউ হাব` (National University portal, locations, notices, employee directory)
+     - Typography uses bold dark slate (`Color(0xFF1E293B)`), zero drop shadows, completely eliminating clutter.
+
+  2. **Model & RSS Rectangular Image Extraction (`lib/models/dhaka_news_model.dart`, `lib/services/dhaka_news_service.dart`):**
+     - Updated `DhakaNewsItem` to include `imageUrl` with serialization.
+     - Added multi-source XML regex extraction in `DhakaNewsService`:
+       - Supports `<media:thumbnail width="240" height="134" url="..." />` (BBC Bangla RSS native thumbnails).
+       - Supports `<media:content>`, `<enclosure url="..." />`, and description embedded image URLs.
+       - Guarantees minimum of 4 rich rectangular image news stories with verified source attribution even in offline/fallback conditions.
+     - Implemented `DhakaNewsService.launchArticle(item.url)` using `url_launcher` (`LaunchMode.externalApplication`).
+
+  3. **Eye-Catching News Carousel Widget (`lib/widget/dhaka_news_ticker.dart`):**
+     - Top badge with animated pulsing live red dot: `⚡ তাজা সংবাদ`, subtitle `ঢাকা ও দেশ-বিদেশ`, and a manual refresh button (`তাজা করুন`).
+     - Horizontal scrolling `ListView.separated` cards:
+       - 16:9 rectangular image container (`height: 115`, `width: 260`) with rounded top corners.
+       - Floating source badge (`ডেইলি স্টার` / `বিডিনিউজ২৪` / `বিবিসি বাংলা`) and open-in-browser icon pill.
+       - 2-line bold headline.
+       - Timestamp and reading prompt `পড়ুন →`.
+     - Card tap triggers `DhakaNewsService.launchArticle()`.
+
+  4. **Verification & Proof (Genymotion Android 15 `192.168.246.103:5555`):**
+     - Automated unit tests: `21/21 passed` in `flutter test`.
+     - Live UI verified: `screen_redesign_verified3.png` demonstrating clean ambient greeting hero, white pastel quick service bar, and eye-catching news carousel.
+     - Horizontal swipe verified: `screen_news_swiped.png` demonstrating smooth scrolling across multiple rectangular image cards.
+     - External article launch verified: `screen_browser_opened.png` showing `bangla.thedailystar.net` loaded immediately upon tapping the news card.

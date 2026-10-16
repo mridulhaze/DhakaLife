@@ -3,12 +3,14 @@ class DhakaNewsHeadline {
   final String url;
   final String source;
   final String? pubDate;
+  final String? imageUrl;
 
   DhakaNewsHeadline({
     required this.title,
     required this.url,
     required this.source,
     this.pubDate,
+    this.imageUrl,
   });
 
   Map<String, dynamic> toJson() => {
@@ -16,6 +18,7 @@ class DhakaNewsHeadline {
         'url': url,
         'source': source,
         'pubDate': pubDate,
+        'imageUrl': imageUrl,
       };
 
   factory DhakaNewsHeadline.fromJson(Map<String, dynamic> json) =>
@@ -24,5 +27,6 @@ class DhakaNewsHeadline {
         url: json['url'] ?? '',
         source: json['source'] ?? '',
         pubDate: json['pubDate'],
+        imageUrl: json['imageUrl'],
       );
 }
