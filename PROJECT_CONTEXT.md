@@ -877,3 +877,36 @@ This file is the single source of truth for the project. Update it whenever:
      - Live UI verified: `screen_redesign_verified3.png` demonstrating clean ambient greeting hero, white pastel quick service bar, and eye-catching news carousel.
      - Horizontal swipe verified: `screen_news_swiped.png` demonstrating smooth scrolling across multiple rectangular image cards.
      - External article launch verified: `screen_browser_opened.png` showing `bangla.thedailystar.net` loaded immediately upon tapping the news card.
+
+---
+
+## 35. Milestone: Working Emergency Dialing, Active Dashboard Search & Comprehensive Bangla Radio Expansion
+
+- **Goal & Deliverables:**
+  1. **Emergency Calling (জরুরি ৯৯৯ ও অন্যান্য সেবা):**
+     - Full dialer integration compliant with Android 11+ and Android 15 `<queries>` package visibility constraints (`android.intent.action.DIAL` with `tel` scheme in `AndroidManifest.xml`).
+     - Tapping the quick action 'জরুরি ৯৯৯' opens an emergency modal bottom sheet with one-touch direct dial for toll-free 999, quick calls for Health Helpline (16263), Child/Women Helpline (109), and direct navigation to the full directory.
+     - Robust error handling and SnackBar feedback via `DhakaEmergencyScreen.makeCall(context, number)` using `LaunchMode.externalApplication`.
+  2. **Active Reactive Dashboard Search:**
+     - Connected the dashboard top search bar with `_searchController`, live `onChanged` listener, and a one-touch clear button (`X`).
+     - Dynamic `_buildDashboardSearchResults()` indexes emergency hotlines (with direct calling buttons), transit guides (Metro Line-6, Bus routes), utilities (Bazar prices, Live Radio, Weather, AI Guide), academic portals (NU Hub, Bill Locations), interactive map places, and civic complaint reports.
+     - Clicking search cards navigates seamlessly to the destination feature screens.
+  3. **Live Bangla Radio (লাইভ বাংলা রেডিও) Full Expansion & Diagnostics:**
+     - Externalized station metadata to `assets/data/bangla_radio.json` with 16 verified stations spanning Bangladesh 🇧🇩, Kolkata (West Bengal) 🇮🇳, and Global 🌍.
+     - Live direct streams verified: Radio Foorti 88.0 FM, Betar Bangla (822 kHz), Jago FM 94.4, Radio GoonGoon, Spice FM 96.4, Peoples Radio 91.6, A2Z Radio, and official Akashvani CloudFront HLS channels (Akashvani Bangla Ch 283, Akashvani Kolkata Geetanjali Ch 284, FM Gold Kolkata 100.7 Ch 286, FM Rainbow Kolkata 107.0 Ch 287, Akashvani Maitree Ch 292).
+     - Explicit web-only fallback players: Radio Bhumi 92.8 FM, Dhaka FM 90.4, Radio Today 89.6 FM, BBC Bangla Portal. Never invents direct streams.
+     - Integrated `audio_session` (0.1.25) to manage audio focus, headphone disconnection (`becomingNoisyEventStream`), and automatic pause/duck on incoming phone calls.
+     - Enhanced UI with country filter tabs, category filter pills, persistent favorites and recently played via `SharedPreferences`.
+     - Built Developer/Admin Diagnostic Screen (`DhakaRadioDiagnosticScreen`):
+       - Real-time server health dashboard (Live Active count, Web player count, Error/Offline count).
+       - One-tap "সকল স্টেশনের লাইভ টেস্ট চালান" executing HTTP HEAD/GET latency and status checks.
+       - Records latency in milliseconds, HTTP response codes, and timestamps.
+
+- **Verification & Acceptance Results:**
+  - Automated Tests: `23/23 passed` in `flutter test`.
+  - Android 15 Emulator Tested (`192.168.246.103:5555`):
+    - Emergency bottom sheet and phone dialer verified (`screen_modal_real.png`, `screen_dialer999_verified.png`).
+    - Reactive search filtering and Metro navigation verified (`screen_search_metro_results.png`, `screen_metro_opened.png`).
+    - Radio country filtering and player screen verified (`screen_radio_test.png`, `screen_kolkata_filter.png`).
+    - Radio diagnostic live test verified (`screen_diag_done.png`, `screen_diag_scroll.png`) confirming 7 live active streams, 4 web fallbacks, and 5 offline/error reports with millisecond latency records.
+

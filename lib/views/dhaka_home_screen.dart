@@ -19,6 +19,7 @@ import 'package:flutter_project_nutcm_1/widget/dhaka_news_ticker.dart';
 import 'package:flutter_project_nutcm_1/views/dhaka_radio_screen.dart';
 import 'package:flutter_project_nutcm_1/widget/dhaka_radio_mini_player.dart';
 import 'package:flutter_project_nutcm_1/views/dhaka_map_screen.dart';
+import 'package:flutter_project_nutcm_1/views/bill_locations.dart';
 
 class DhakaHomeScreen extends StatefulWidget {
   const DhakaHomeScreen({Key? key}) : super(key: key);
@@ -33,6 +34,7 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
   String _selectedArea = 'মিরপুর-১০, ঢাকা';
   bool _isBangla = true;
   String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
   Map<String, dynamic>? _weatherSummary;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -60,6 +62,7 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
 
   @override
   void dispose() {
+    _searchController.dispose();
     _sunAnimationController.dispose();
     super.dispose();
   }
@@ -335,37 +338,51 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
                   ],
                 ),
                 child: TextField(
+                  controller: _searchController,
                   onChanged: (val) {
-                    setState(() => _searchQuery = val);
+                    setState(() => _searchQuery = val.trim());
                   },
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText:
                         'কী খুঁজছেন? (মেট্রো, হাসপাতাল, বাজার দর, বাস)...',
-                    hintStyle: TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
-                    prefixIcon: Icon(Icons.search,
+                    hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
+                    prefixIcon: const Icon(Icons.search,
                         color: Color(0xFF64748B), size: 22),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 20, color: Color(0xFF94A3B8)),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
                     border: InputBorder.none,
                     contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
                 ),
               ),
             ),
 
-            const SizedBox(height: 10),
+            if (_searchQuery.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _buildDashboardSearchResults(),
+            ] else ...[
+              const SizedBox(height: 10),
 
-            // DYNAMIC TIME-AWARE BANNER (Lite Orange Sunrise / Noon / Sunset / Night Animation)
-            _buildTimeAwareBanner(),
+              // DYNAMIC TIME-AWARE BANNER (Lite Orange Sunrise / Noon / Sunset / Night Animation)
+              _buildTimeAwareBanner(),
 
-            const SizedBox(height: 10),
+              const SizedBox(height: 10),
 
-            // CLEAN QUICK ACCESS SERVICES (Emergency 999, Metro, Bazar, NU Hub)
-            _buildQuickServiceBar(),
+              // CLEAN QUICK ACCESS SERVICES (Emergency 999, Metro, Bazar, NU Hub)
+              _buildQuickServiceBar(),
 
-            const SizedBox(height: 14),
+              const SizedBox(height: 14),
 
-            // EYE-CATCHING BANGLA NEWS CAROUSEL (with 16:9 rectangular photos & clickable links)
-            const DhakaNewsTicker(),
+              // EYE-CATCHING BANGLA NEWS CAROUSEL (with 16:9 rectangular photos & clickable links)
+              const DhakaNewsTicker(),
 
             const SizedBox(height: 16),
 
@@ -414,6 +431,7 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
             _buildCommunityAlerts(),
 
             const SizedBox(height: 30),
+            ],
           ],
         ),
       ),
@@ -785,10 +803,7 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
             label: 'জরুরি ৯৯৯',
             iconColor: const Color(0xFFDC2626),
             bgColor: const Color(0xFFFEE2E2),
-            onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const DhakaEmergencyScreen())),
+            onTap: () => _showEmergencyCallModal(context),
           ),
           _buildQuickServiceItem(
             icon: PhosphorIcons.train(PhosphorIconsStyle.fill),
@@ -862,6 +877,480 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showEmergencyCallModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFEE2E2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.emergency,
+                            color: Color(0xFFDC2626), size: 22),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'জরুরি যোগাযোগ ও হেল্পলাইন',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(sheetContext),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(sheetContext);
+                    DhakaEmergencyScreen.makeCall(context, '999');
+                  },
+                  icon: const Icon(Icons.phone_in_talk, size: 22),
+                  label: const Text(
+                    'সরাসরি ৯৯৯ কল করুন (টোল-ফ্রি)',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFDC2626),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 2,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(sheetContext);
+                        DhakaEmergencyScreen.makeCall(context, '16263');
+                      },
+                      icon: const Icon(Icons.medical_services_outlined,
+                          size: 16),
+                      label: const Text('স্বাস্থ্য ১৬২৬৩',
+                          style: TextStyle(fontSize: 12)),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF059669),
+                        side: const BorderSide(color: Color(0xFFA7F3D0)),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(sheetContext);
+                        DhakaEmergencyScreen.makeCall(context, '109');
+                      },
+                      icon: const Icon(Icons.shield_outlined, size: 16),
+                      label: const Text('হেল্পলাইন ১০৯',
+                          style: TextStyle(fontSize: 12)),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF7C3AED),
+                        side: const BorderSide(color: Color(0xFFDDD6FE)),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.pop(sheetContext);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const DhakaEmergencyScreen()),
+                  );
+                },
+                icon: const Icon(Icons.format_list_bulleted, size: 16),
+                label: const Text('সকল জরুরি সেবা ডিরেক্টরি দেখুন >',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDashboardSearchResults() {
+    final query = _searchQuery.toLowerCase();
+
+    final List<Map<String, dynamic>> allSearchItems = [
+      {
+        'title': 'জাতীয় জরুরি সেবা ৯৯৯',
+        'subtitle': 'পুলিশ, অ্যাম্বুলেন্স অথবা ফায়ার সার্ভিস তাৎক্ষণিক সহায়তা',
+        'category': 'জরুরি হটলাইন',
+        'icon': Icons.emergency_rounded,
+        'color': const Color(0xFFDC2626),
+        'phone': '999',
+        'action': () => DhakaEmergencyScreen.makeCall(context, '999'),
+        'keywords': ['999', 'জরুরি', 'পুলিশ', 'police', 'ambulance', 'fire', 'emergency'],
+      },
+      {
+        'title': 'স্বাস্থ্য বাতায়ন ১৬২৬৩',
+        'subtitle': '২৪ ঘণ্টা যেকোনো স্বাস্থ্য পরামর্শ ও সরকারি ডাক্তার',
+        'category': 'জরুরি স্বাস্থ্য',
+        'icon': Icons.medical_services_rounded,
+        'color': const Color(0xFF059669),
+        'phone': '16263',
+        'action': () => DhakaEmergencyScreen.makeCall(context, '16263'),
+        'keywords': ['16263', 'স্বাস্থ্য', 'ডাক্তার', 'হাসপাতাল', 'চিকিৎসা', 'doctor', 'hospital'],
+      },
+      {
+        'title': 'নারী ও শিশু নির্যাতন হেল্পলাইন ১০৯',
+        'subtitle': 'নারী ও শিশুদের সুরক্ষায় ২৪ ঘণ্টা টোল-ফ্রি জাতীয় সেবা',
+        'category': 'জরুরি হেল্পলাইন',
+        'icon': Icons.shield_rounded,
+        'color': const Color(0xFF7C3AED),
+        'phone': '109',
+        'action': () => DhakaEmergencyScreen.makeCall(context, '109'),
+        'keywords': ['109', 'নারী', 'শিশু', 'আইন', 'women', 'child'],
+      },
+      {
+        'title': 'সরকারি তথ্য ও সেবা ৩৩৩',
+        'subtitle': 'যেকোনো সরকারি সেবা ও তথ্য সহায়তার জাতীয় কল সেন্টার',
+        'category': 'সরকারি তথ্য',
+        'icon': Icons.support_agent_rounded,
+        'color': const Color(0xFF2563EB),
+        'phone': '333',
+        'action': () => DhakaEmergencyScreen.makeCall(context, '333'),
+        'keywords': ['333', 'তথ্য', 'সরকারি', 'নাগরিক', 'govt', 'info'],
+      },
+      {
+        'title': 'ফায়ার সার্ভিস হটলাইন ১০২',
+        'subtitle': 'অগ্নিকাণ্ড ও উদ্ধার তৎপরতায় কেন্দ্রীয় নিয়ন্ত্রণ কক্ষ',
+        'category': 'জরুরি উদ্ধার',
+        'icon': Icons.local_fire_department_rounded,
+        'color': const Color(0xFFEA580C),
+        'phone': '102',
+        'action': () => DhakaEmergencyScreen.makeCall(context, '102'),
+        'keywords': ['102', 'ফায়ার', 'আগুন', 'উদ্ধার', 'fire', 'rescue'],
+      },
+      {
+        'title': 'ঢাকা মেট্রোরেল (MRT Line-6)',
+        'subtitle': 'উত্তরা থেকে মতিঝিল স্টেশন তালিকা, সময়সূচি ও স্মার্ট ভাড়া',
+        'category': 'যাতায়াত ও পরিবহন',
+        'icon': PhosphorIcons.train(PhosphorIconsStyle.fill),
+        'color': const Color(0xFF059669),
+        'action': () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const DhakaBusMetroScreen())),
+        'keywords': ['metro', 'মেট্রো', 'মেট্রোরেল', 'উত্তরা', 'মতিঝিল', 'ট্রেন', 'ভাড়া', 'station', 'train'],
+      },
+      {
+        'title': 'ঢাকা বাস রুট ও টিকিট কাউন্টার',
+        'subtitle': 'ঢাকার অভ্যন্তরীণ ও আন্তঃজেলা বাস রুট এবং স্টপেজ',
+        'category': 'যাতায়াত ও পরিবহন',
+        'icon': PhosphorIcons.bus(PhosphorIconsStyle.fill),
+        'color': const Color(0xFF0284C7),
+        'action': () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const DhakaBusMetroScreen())),
+        'keywords': ['bus', 'বাস', 'রুট', 'কাউন্টার', 'গাড়ি', 'টিকেট', 'route'],
+      },
+      {
+        'title': 'ঢাকা বাজার দর ও নিত্যপ্রয়োজনীয় মূল্যতালিকা',
+        'subtitle': 'আলু, পেঁয়াজ, ডিম, চাল, তেল ও ব্রয়লার মুরগির দৈনিক দর',
+        'category': 'দৈনন্দিন বাজার',
+        'icon': PhosphorIcons.shoppingBag(PhosphorIconsStyle.fill),
+        'color': const Color(0xFFD97706),
+        'action': () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const DhakaBazarScreen())),
+        'keywords': ['bazar', 'বাজার', 'আলু', 'পেঁয়াজ', 'ডিম', 'চাল', 'মুরগি', 'তেল', 'দর', 'market', 'price', 'egg', 'potato'],
+      },
+      {
+        'title': 'লাইভ বাংলা রেডিও (Live Radio)',
+        'subtitle': 'রেডিও ফুর্তি, জাগো এফএম, আকাশবাণী বাংলা ও কলকাতা এফএম',
+        'category': 'বিনোদন ও সঙ্গীত',
+        'icon': PhosphorIcons.broadcast(PhosphorIconsStyle.fill),
+        'color': const Color(0xFF7C3AED),
+        'action': () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const DhakaRadioScreen())),
+        'keywords': ['radio', 'রেডিও', 'গান', 'লাইভ', 'ফুর্তি', 'জাগো', 'আকাশবাণী', 'কলকাতা', 'সংগীত', 'music', 'live'],
+      },
+      {
+        'title': 'আবহাওয়া ও ৭ দিনের পূর্বাভাস',
+        'subtitle': 'ঢাকার বর্তমান তাপমাত্রা, বৃষ্টিপাত, আর্দ্রতা ও লাইভ তথ্য',
+        'category': 'আবহাওয়া বার্তা',
+        'icon': PhosphorIcons.sunHorizon(PhosphorIconsStyle.fill),
+        'color': const Color(0xFFF59E0B),
+        'action': () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const DhakaWeatherScreen())),
+        'keywords': ['weather', 'আবহাওয়া', 'বৃষ্টি', 'তাপমাত্রা', 'রোদ', 'forecast', 'rain', 'temperature'],
+      },
+      {
+        'title': 'জাতীয় বিশ্ববিদ্যালয় (এনইউ হাব)',
+        'subtitle': 'অধিভুক্ত কলেজ, নোটিশ বোর্ড, কর্মকর্তা-কর্মচারী ডিরেক্টরি',
+        'category': 'শিক্ষা ও বিশ্ববিদ্যালয়',
+        'icon': PhosphorIcons.graduationCap(PhosphorIconsStyle.fill),
+        'color': const Color(0xFF7C3AED),
+        'action': () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const NuServicesScreen())),
+        'keywords': ['nu', 'জাতীয়', 'বিশ্ববিদ্যালয়', 'কলেজ', 'নোটিশ', 'university', 'college', 'notice'],
+      },
+      {
+        'title': 'ট্যুর বিল ও লোকেশন ডিরেক্টরি',
+        'subtitle': 'বরিশাল, বরগুনা, আমতলীসহ বিভিন্ন জেলার দূরত্ব ও অনুমোদিত বিল',
+        'category': 'জাতীয় বিশ্ববিদ্যালয় বিল',
+        'icon': Icons.location_city_rounded,
+        'color': const Color(0xFF0D9488),
+        'action': () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const UserListScreen())),
+        'keywords': ['location', 'বিল', 'ট্যুর', 'বরিশাল', 'বরগুনা', 'আমতলী', 'ভোলা', 'গাজীপুর', 'ভাতা', 'tour', 'bill'],
+      },
+      {
+        'title': 'ইন্টারঅ্যাকটিভ ম্যাপ ও আশপাশের স্থান',
+        'subtitle': 'নিকটস্থ হাসপাতাল, ফার্মেসি, থানা ও এটিএম বুথ ম্যাপে খুঁজুন',
+        'category': 'ম্যাপ ও লোকেশন',
+        'icon': PhosphorIcons.mapPin(PhosphorIconsStyle.fill),
+        'color': const Color(0xFF2563EB),
+        'action': () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const DhakaMapScreen())),
+        'keywords': ['map', 'ম্যাপ', 'নিকটস্থ', 'হাসপাতাল', 'ফার্মেসি', 'থানা', 'এটিএম', 'nearby', 'places'],
+      },
+      {
+        'title': 'নাগরিক সমস্যা ও সিটি রিপোর্ট',
+        'subtitle': 'রাস্তার খানাখন্দ, বর্জ্য ও ড্রেনেজ সমস্যা সিটি করপোরেশনে জানান',
+        'category': 'নাগরিক সেবা',
+        'icon': PhosphorIcons.warningCircle(PhosphorIconsStyle.fill),
+        'color': const Color(0xFFE11D48),
+        'action': () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const DhakaCivicReportScreen())),
+        'keywords': ['civic', 'অভিযোগ', 'রিপোর্ট', 'রাস্তা', 'বর্জ্য', 'সিটি', 'report', 'problem'],
+      },
+      {
+        'title': 'ঢাকা এআই সহকারী (AI Guide)',
+        'subtitle': 'ঢাকা শহরের যেকোনো প্রশ্ন, রুট ও নির্দেশনায় স্মার্ট এআই',
+        'category': 'স্মার্ট সহকারী',
+        'icon': PhosphorIcons.robot(PhosphorIconsStyle.fill),
+        'color': const Color(0xFF4F46E5),
+        'action': () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const DhakaAiAssistantScreen())),
+        'keywords': ['ai', 'এআই', 'সহকারী', 'সহায়তা', 'বট', 'স্মার্ট', 'assistant', 'chat'],
+      },
+    ];
+
+    final results = allSearchItems.where((item) {
+      final title = (item['title'] as String).toLowerCase();
+      final sub = (item['subtitle'] as String).toLowerCase();
+      final cat = (item['category'] as String).toLowerCase();
+      final keywords = (item['keywords'] as List<String>).map((k) => k.toLowerCase()).toList();
+
+      if (title.contains(query) || sub.contains(query) || cat.contains(query)) {
+        return true;
+      }
+      return keywords.any((k) => k.contains(query) || query.contains(k));
+    }).toList();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'অনুসন্ধানের ফলাফল (${results.length} টি পাওয়া গেছে)',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() => _searchQuery = '');
+                },
+                child: const Text('মুছুন (Clear)', style: TextStyle(fontSize: 12)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (results.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(28),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                children: [
+                  const Icon(Icons.search_off_rounded, size: 40, color: Color(0xFF94A3B8)),
+                  const SizedBox(height: 10),
+                  Text(
+                    '"$_searchQuery" সম্পর্কিত কিছু পাওয়া যায়নি',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF334155),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'অন্য কোনো নাম বা কি-ওয়ার্ড দিয়ে পুনরায় চেষ্টা করুন (যেমন: মেট্রো, ৯৯৯, বাজার, রেডিও)।',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                  ),
+                ],
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: results.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                final item = results[index];
+                final color = item['color'] as Color;
+                final phone = item['phone'] as String?;
+
+                return Material(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  child: InkWell(
+                    onTap: item['action'] as VoidCallback,
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(item['icon'] as IconData, color: color, size: 22),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        item['title'] as String,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF0F172A),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF1F5F9),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        item['category'] as String,
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF475569),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  item['subtitle'] as String,
+                                  style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (phone != null)
+                            ElevatedButton.icon(
+                              onPressed: () => DhakaEmergencyScreen.makeCall(context, phone),
+                              icon: const Icon(Icons.call, size: 14),
+                              label: const Text('কল', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                              style: ElevatedButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                backgroundColor: const Color(0xFFDC2626),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                            )
+                          else
+                            const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF94A3B8), size: 14),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          const SizedBox(height: 20),
+        ],
       ),
     );
   }

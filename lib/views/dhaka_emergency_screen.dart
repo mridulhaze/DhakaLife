@@ -6,10 +6,31 @@ import '../services/dhaka_data_service.dart';
 class DhakaEmergencyScreen extends StatelessWidget {
   const DhakaEmergencyScreen({Key? key}) : super(key: key);
 
-  void _callNumber(String number) async {
-    final Uri url = Uri.parse('tel:$number');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
+  static Future<bool> makeCall(BuildContext? context, String number) async {
+    final cleanNumber = number.replaceAll(RegExp(r'[^0-9+]'), '');
+    final Uri uri = Uri.parse('tel:$cleanNumber');
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && context != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('ডায়ালার চালু করা যায়নি: $cleanNumber'),
+            backgroundColor: const Color(0xFFDC2626),
+          ),
+        );
+      }
+      return launched;
+    } catch (e) {
+      debugPrint('Error calling $cleanNumber: $e');
+      if (context != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('ডায়ালার ত্রুটি: $cleanNumber'),
+            backgroundColor: const Color(0xFFDC2626),
+          ),
+        );
+      }
+      return false;
     }
   }
 
@@ -23,16 +44,33 @@ class DhakaEmergencyScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0.5,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF0F172A), size: 20),
-          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back_ios_new,
+              color: Color(0xFF0F172A), size: 20),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            }
+          },
         ),
-        title: const Text(
-          'জরুরি সেবা ডিরেক্টরি (Emergency)',
-          style: TextStyle(
-            color: Color(0xFF0F172A),
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'জরুরি সেবা ডিরেক্টরি (Emergency)',
+              style: TextStyle(
+                color: Color(0xFF0F172A),
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            Text(
+              'এক স্পর্শে সরাসরি জরুরি নম্বরে কল করুন',
+              style: TextStyle(
+                color: Color(0xFF64748B),
+                fontSize: 11,
+              ),
+            ),
+          ],
         ),
       ),
       body: ListView(
@@ -63,14 +101,18 @@ class DhakaEmergencyScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Text(
                         'টোল-ফ্রি ২৪/৭',
-                        style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                     const Icon(Icons.emergency, color: Colors.white, size: 30),
@@ -96,11 +138,12 @@ class DhakaEmergencyScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
                 ElevatedButton.icon(
-                  onPressed: () => _callNumber('999'),
+                  onPressed: () => makeCall(context, '999'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: const Color(0xFFB71C1C),
-                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 28, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
@@ -109,7 +152,8 @@ class DhakaEmergencyScreen extends StatelessWidget {
                   icon: const Icon(Icons.phone_in_talk, size: 20),
                   label: const Text(
                     'এখনই ৯৯৯ কল করুন',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                   ),
                 ),
               ],
@@ -144,7 +188,9 @@ class DhakaEmergencyScreen extends StatelessWidget {
                 ],
               ),
               child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                onTap: () => makeCall(context, contact.number),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 leading: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
@@ -167,11 +213,13 @@ class DhakaEmergencyScreen extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       contact.descriptionBn,
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                      style: const TextStyle(
+                          fontSize: 12, color: Color(0xFF64748B)),
                     ),
                     const SizedBox(height: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(6),
@@ -194,9 +242,10 @@ class DhakaEmergencyScreen extends StatelessWidget {
                       color: contact.color,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.call, color: Colors.white, size: 18),
+                    child:
+                        const Icon(Icons.call, color: Colors.white, size: 18),
                   ),
-                  onPressed: () => _callNumber(contact.number),
+                  onPressed: () => makeCall(context, contact.number),
                 ),
               ),
             );
