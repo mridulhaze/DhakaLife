@@ -437,22 +437,6 @@ class _UserListScreenState extends State<UserListScreen>
 
 
 
-  late AnimationController _controller;
-
-/*
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this);
-  }
-
-  */
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {

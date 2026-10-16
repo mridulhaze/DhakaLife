@@ -20,6 +20,10 @@ import 'package:flutter_project_nutcm_1/views/dhaka_radio_screen.dart';
 import 'package:flutter_project_nutcm_1/widget/dhaka_radio_mini_player.dart';
 import 'package:flutter_project_nutcm_1/views/dhaka_map_screen.dart';
 import 'package:flutter_project_nutcm_1/views/bill_locations.dart';
+import 'package:flutter_project_nutcm_1/widget/home/home_hero_header.dart';
+import 'package:flutter_project_nutcm_1/widget/home/quick_actions_row.dart';
+import 'package:flutter_project_nutcm_1/views/traffic/dhaka_traffic_screen.dart';
+import 'package:flutter_project_nutcm_1/services/dhaka_location_service.dart';
 
 class DhakaHomeScreen extends StatefulWidget {
   const DhakaHomeScreen({Key? key}) : super(key: key);
@@ -28,8 +32,7 @@ class DhakaHomeScreen extends StatefulWidget {
   State<DhakaHomeScreen> createState() => _DhakaHomeScreenState();
 }
 
-class _DhakaHomeScreenState extends State<DhakaHomeScreen>
-    with SingleTickerProviderStateMixin {
+class _DhakaHomeScreenState extends State<DhakaHomeScreen> {
   int _bottomNavIndex = 0;
   String _selectedArea = 'মিরপুর-১০, ঢাকা';
   bool _isBangla = true;
@@ -38,32 +41,17 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
   Map<String, dynamic>? _weatherSummary;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  late AnimationController _sunAnimationController;
-  late Animation<double> _sunPulseAnimation;
-
   @override
   void initState() {
     super.initState();
     _loadWeather();
-
-    // Subtle sun rise / noon / night breathing animation
-    _sunAnimationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat(reverse: true);
-
-    _sunPulseAnimation = Tween<double>(begin: 0.94, end: 1.06).animate(
-      CurvedAnimation(
-        parent: _sunAnimationController,
-        curve: Curves.easeInOut,
-      ),
-    );
+    // Auto-detect GPS location on startup/login
+    DhakaLocationService.to.detectAndApplyLocation();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _sunAnimationController.dispose();
     super.dispose();
   }
 
@@ -138,6 +126,7 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
                         setState(() {
                           _selectedArea = area;
                         });
+                        DhakaLocationService.to.currentLocationName.value = area;
                         Navigator.pop(context);
                       },
                     );
@@ -158,6 +147,7 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
       backgroundColor: const Color(0xFFF8FAFC),
       drawer: AppDrawer(),
       body: SafeArea(
+        top: _bottomNavIndex != 0,
         child: IndexedStack(
           index: _bottomNavIndex,
           children: [
@@ -229,654 +219,137 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
   }
 
   Widget _buildHomeTab() {
+    final topPadding = MediaQuery.of(context).padding.top;
+
     return RefreshIndicator(
       onRefresh: _loadWeather,
-      color: const Color(0xFFF57C00),
-      child: SingleChildScrollView(
+      color: const Color(0xFF1E88E5),
+      child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics()),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Pathao-style Top App Bar
-            _buildTopBar(),
-
-            // Location Selector & Language Pill
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  InkWell(
-                    onTap: _selectAreaModal,
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.03),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.location_on,
-                              color: Color(0xFFE53935), size: 16),
-                          const SizedBox(width: 6),
-                          Text(
-                            _selectedArea,
-                            style: const TextStyle(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1E293B),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.keyboard_arrow_down,
-                              color: Color(0xFF64748B), size: 18),
-                        ],
-                      ),
-                    ),
+        slivers: [
+          // Collapsible Material 3 Hero Header (Skyline backdrop, Glass Location Pill, Weather Chip, Floating Search)
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: HomeHeroHeaderDelegate(
+              weatherSummary: _weatherSummary,
+              searchController: _searchController,
+              onSearchChanged: (val) {
+                setState(() => _searchQuery = val.trim());
+              },
+              onSearchClear: () {
+                _searchController.clear();
+                setState(() => _searchQuery = '');
+              },
+              onLocationTap: _selectAreaModal,
+              onWeatherTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DhakaWeatherScreen(),
                   ),
-                  // Language toggle button
-                  InkWell(
-                    onTap: () {
-                      setState(() {
-                        _isBangla = !_isBangla;
-                      });
-                    },
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.language,
-                              size: 14, color: Color(0xFF475569)),
-                          const SizedBox(width: 4),
-                          Text(
-                            _isBangla ? 'বাং | EN' : 'EN | বাং',
-                            style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF334155)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                );
+              },
+              onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
+              onLanguageToggle: () {
+                setState(() => _isBangla = !_isBangla);
+              },
+              isBangla: _isBangla,
+              topPadding: topPadding,
             ),
+          ),
 
-            // Global Search Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: (val) {
-                    setState(() => _searchQuery = val.trim());
-                  },
-                  decoration: InputDecoration(
-                    hintText:
-                        'কী খুঁজছেন? (মেট্রো, হাসপাতাল, বাজার দর, বাস)...',
-                    hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
-                    prefixIcon: const Icon(Icons.search,
-                        color: Color(0xFF64748B), size: 22),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear, size: 20, color: Color(0xFF94A3B8)),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() => _searchQuery = '');
-                            },
-                          )
-                        : null,
-                    border: InputBorder.none,
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
-                ),
-              ),
-            ),
-
-            if (_searchQuery.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              _buildDashboardSearchResults(),
-            ] else ...[
-              const SizedBox(height: 10),
-
-              // DYNAMIC TIME-AWARE BANNER (Lite Orange Sunrise / Noon / Sunset / Night Animation)
-              _buildTimeAwareBanner(),
-
-              const SizedBox(height: 10),
-
-              // CLEAN QUICK ACCESS SERVICES (Emergency 999, Metro, Bazar, NU Hub)
-              _buildQuickServiceBar(),
-
-              const SizedBox(height: 14),
-
-              // EYE-CATCHING BANGLA NEWS CAROUSEL (with 16:9 rectangular photos & clickable links)
-              const DhakaNewsTicker(),
-
-            const SizedBox(height: 16),
-
-            // Primary Services Grid
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    _isBangla ? 'প্রয়োজনীয় সকল সেবা' : 'Daily Services',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      setState(() => _bottomNavIndex = 1);
-                    },
-                    child: Text(
-                      _isBangla ? 'সব দেখুন >' : 'View All >',
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1E88E5),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            _buildServicesGrid(),
-
-            const SizedBox(height: 20),
-
-            // Quick Actions Section
-            _buildQuickActions(),
-
-            const SizedBox(height: 20),
-
-            // Live Dhaka Community Alerts
-            _buildCommunityAlerts(),
-
-            const SizedBox(height: 30),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: Colors.white,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.menu_rounded,
-                    color: Color(0xFF0F172A), size: 26),
-                onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-              ),
-              const SizedBox(width: 4),
-              // Brand Logo and Name
-              Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFFE53935), Color(0xFF1E88E5)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Center(
-                      child: Icon(Icons.flash_on_rounded,
-                          color: Colors.white, size: 20),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Column(
+          // Body Content / Search Results
+          SliverToBoxAdapter(
+            child: _searchQuery.isNotEmpty
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: _buildDashboardSearchResults(),
+                  )
+                : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'DhakaLife',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -0.5,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      Text(
-                        'ঢাকা সুপার অ্যাপ',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          // Points Pill & Profile Avatar
-          Row(
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF7ED),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFFFEDD5)),
-                ),
-                child: Row(
-                  children: const [
-                    Icon(Icons.stars_rounded,
-                        color: Color(0xFFF97316), size: 16),
-                    SizedBox(width: 4),
-                    Text(
-                      '১২৫০ পয়েন্ট',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFC2410C),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ProfilePage()),
-                  );
-                },
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
-                    shape: BoxShape.circle,
-                    border:
-                        Border.all(color: const Color(0xFF3B82F6), width: 1.5),
-                  ),
-                  child: const Center(
-                    child:
-                        Icon(Icons.person, color: Color(0xFF1E88E5), size: 22),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // DYNAMIC TIME-AWARE AMBIENT WEATHER BANNER (Simple, Clean & Uncluttered)
-  Widget _buildTimeAwareBanner() {
-    final now = DateTime.now();
-    final hour = now.hour;
-
-    final temp = _weatherSummary?['temperature'] ?? '31°C';
-    final cond = _weatherSummary?['conditionBn'] ?? 'পরিষ্কার আকাশ';
-
-    String bgImage;
-    String greetingBn;
-    IconData timeIcon;
-    Color iconColor;
-    List<Color> overlayGradient;
-
-    if (hour >= 5 && hour < 12) {
-      // 🌅 MORNING (5am - 12pm)
-      bgImage = 'assets/images/dashboard_top/morning.jpeg';
-      greetingBn = 'সুপ্রভাত ঢাকা';
-      timeIcon = PhosphorIcons.sunHorizon(PhosphorIconsStyle.fill);
-      iconColor = const Color(0xFFFFB74D);
-      overlayGradient = [
-        Colors.black.withOpacity(0.50),
-        Colors.black.withOpacity(0.35),
-        Colors.black.withOpacity(0.60),
-      ];
-    } else if (hour >= 12 && hour < 17) {
-      // ☀️ NOON (12pm - 5pm)
-      bgImage = 'assets/images/dashboard_top/noon.jpeg';
-      greetingBn = 'শুভ দুপুর ঢাকা';
-      timeIcon = PhosphorIcons.sun(PhosphorIconsStyle.fill);
-      iconColor = const Color(0xFFFFD54F);
-      overlayGradient = [
-        Colors.black.withOpacity(0.50),
-        Colors.black.withOpacity(0.30),
-        Colors.black.withOpacity(0.60),
-      ];
-    } else {
-      // 🌙 NIGHT (5pm - 5am)
-      bgImage = 'assets/images/dashboard_top/night.jpeg';
-      greetingBn = (hour >= 17 && hour < 20) ? 'শুভ সন্ধ্যা ঢাকা' : 'শুভ রাত্রি ঢাকা';
-      timeIcon = (hour >= 17 && hour < 20)
-          ? PhosphorIcons.sunHorizon(PhosphorIconsStyle.fill)
-          : PhosphorIcons.moonStars(PhosphorIconsStyle.fill);
-      iconColor = const Color(0xFFFFD54F);
-      overlayGradient = [
-        Colors.black.withOpacity(0.60),
-        Colors.black.withOpacity(0.40),
-        Colors.black.withOpacity(0.70),
-      ];
-    }
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.12),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          children: [
-            // Background Landscape Image
-            Positioned.fill(
-              child: Image.asset(
-                bgImage,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFFE65100), Color(0xFFF57C00)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            // Translucent Dark Gradient Overlay for optimal legibility
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: overlayGradient,
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                ),
-              ),
-            ),
-            // Banner Hero Weather Content
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const DhakaWeatherScreen(),
-                    ),
-                  );
-                },
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Left: Greeting & Current Live Weather
-                      Row(
-                        children: [
-                          ScaleTransition(
-                            scale: _sunPulseAnimation,
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                    color: Colors.white.withOpacity(0.3)),
-                              ),
-                              child: Icon(timeIcon, color: iconColor, size: 24),
-                            ),
+                      const SizedBox(height: 10),
+
+                      // Slim Material 3 Quick Action Row (জরুরি ৯৯৯, মেট্রোরেল, বাজার দর, এনইউ হাব)
+                      QuickActionsRow(
+                        onEmergencyTap: () => _showEmergencyCallModal(context),
+                        onMetroTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const DhakaBusMetroScreen(),
                           ),
-                          const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                greetingBn,
+                        ),
+                        onBazarTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const DhakaBazarScreen(),
+                          ),
+                        ),
+                        onNuHubTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NuServicesScreen(),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // Automated Smooth-Scrolling Bangla News Ticker
+                      const DhakaNewsTicker(),
+
+                      const SizedBox(height: 16),
+
+                      // Primary Services Grid Header
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _isBangla ? 'প্রয়োজনীয় সকল সেবা' : 'Daily Services',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                            InkWell(
+                              onTap: () {
+                                setState(() => _bottomNavIndex = 1);
+                              },
+                              child: Text(
+                                _isBangla ? 'সব দেখুন >' : 'View All >',
                                 style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
+                                  fontSize: 12.5,
                                   fontWeight: FontWeight.bold,
-                                  shadows: [
-                                    Shadow(color: Colors.black54, blurRadius: 4),
-                                  ],
+                                  color: Color(0xFF1E88E5),
                                 ),
                               ),
-                              const SizedBox(height: 3),
-                              Row(
-                                children: [
-                                  Text(
-                                    'ঢাকা: $temp',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                      shadows: [
-                                        Shadow(color: Colors.black54, blurRadius: 4),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 7, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.22),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      cond,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-
-                      // Right: Clickable Weather Forecast Pill
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.22),
-                          borderRadius: BorderRadius.circular(16),
-                          border:
-                              Border.all(color: Colors.white.withOpacity(0.35)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Text(
-                              'পূর্বাভাস',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
                             ),
-                            SizedBox(width: 3),
-                            Icon(Icons.arrow_forward_ios_rounded,
-                                color: Colors.white, size: 10),
                           ],
                         ),
                       ),
+                      const SizedBox(height: 12),
+
+                      _buildServicesGrid(),
+
+                      const SizedBox(height: 20),
+
+                      // Quick Actions Section
+                      _buildQuickActions(),
+
+                      const SizedBox(height: 20),
+
+                      // Live Dhaka Community Alerts
+                      _buildCommunityAlerts(),
+
+                      const SizedBox(height: 30),
                     ],
                   ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // DEDICATED CLEAN QUICK SERVICE BAR (Zero Noise, Airy, Professional)
-  Widget _buildQuickServiceBar() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
           ),
         ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildQuickServiceItem(
-            icon: PhosphorIcons.phoneCall(PhosphorIconsStyle.fill),
-            label: 'জরুরি ৯৯৯',
-            iconColor: const Color(0xFFDC2626),
-            bgColor: const Color(0xFFFEE2E2),
-            onTap: () => _showEmergencyCallModal(context),
-          ),
-          _buildQuickServiceItem(
-            icon: PhosphorIcons.train(PhosphorIconsStyle.fill),
-            label: 'মেট্রোরেল',
-            iconColor: const Color(0xFF059669),
-            bgColor: const Color(0xFFD1FAE5),
-            onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const DhakaBusMetroScreen())),
-          ),
-          _buildQuickServiceItem(
-            icon: PhosphorIcons.shoppingBag(PhosphorIconsStyle.fill),
-            label: 'বাজার দর',
-            iconColor: const Color(0xFFD97706),
-            bgColor: const Color(0xFFFEF3C7),
-            onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const DhakaBazarScreen())),
-          ),
-          _buildQuickServiceItem(
-            icon: PhosphorIcons.graduationCap(PhosphorIconsStyle.fill),
-            label: 'এনইউ হাব',
-            iconColor: const Color(0xFF7C3AED),
-            bgColor: const Color(0xFFEDE9FE),
-            onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const NuServicesScreen())),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickServiceItem({
-    required IconData icon,
-    required String label,
-    required Color iconColor,
-    required Color bgColor,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Center(
-                child: Icon(icon, color: iconColor, size: 26),
-              ),
-            ),
-            const SizedBox(height: 7),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -1177,6 +650,17 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
             context,
             MaterialPageRoute(builder: (context) => const DhakaAiAssistantScreen())),
         'keywords': ['ai', 'এআই', 'সহকারী', 'সহায়তা', 'বট', 'স্মার্ট', 'assistant', 'chat'],
+      },
+      {
+        'title': 'লাইভ ট্রাফিক ও রুট আপডেট',
+        'subtitle': 'ঢাকা শহরের রাস্তার যানজট, বিকল্প রুট ও কমিউনিটি লাইভ রিপোর্ট',
+        'category': 'যাতায়াত ও পরিবহন',
+        'icon': Icons.traffic_rounded,
+        'color': const Color(0xFFEF4444),
+        'action': () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const DhakaTrafficScreen())),
+        'keywords': ['traffic', 'ট্রাফিক', 'জ্যাম', 'যানজট', 'রাস্তা', 'রুট', 'ম্যাপ', 'jam', 'road'],
       },
     ];
 
@@ -1573,6 +1057,32 @@ class _DhakaHomeScreenState extends State<DhakaHomeScreen>
                   context,
                   MaterialPageRoute(
                       builder: (context) => const DhakaMapScreen()));
+            },
+          ),
+
+          // 13. Live Traffic Updates & Route Assistance
+          _buildServiceCard(
+            title: 'লাইভ ট্রাফিক ও রুট',
+            subtitle: 'যানজট ও বিকল্প রাস্তা',
+            badge: 'লাইভ ওএসএম',
+            badgeColor: const Color(0xFFEF4444),
+            serviceIcon: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEE2E2),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Icon(
+                Icons.traffic_rounded,
+                color: Color(0xFFDC2626),
+                size: 26,
+              ),
+            ),
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const DhakaTrafficScreen()));
             },
           ),
         ],

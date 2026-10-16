@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/dhaka_news_model.dart';
 import '../services/dhaka_news_service.dart';
 
@@ -18,6 +17,9 @@ class _DhakaNewsTickerState extends State<DhakaNewsTicker>
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   final ScrollController _scrollController = ScrollController();
+  Timer? _autoScrollTimer;
+  bool _isUserInteracting = false;
+  Timer? _resumeTimer;
 
   @override
   void initState() {
@@ -32,8 +34,47 @@ class _DhakaNewsTickerState extends State<DhakaNewsTicker>
     _loadNews();
   }
 
+  void _startAutoScroll() {
+    _autoScrollTimer?.cancel();
+    if (_headlines.isEmpty) return;
+    _autoScrollTimer = Timer.periodic(const Duration(milliseconds: 3500), (timer) {
+      if (!_scrollController.hasClients || _isUserInteracting) return;
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final current = _scrollController.offset;
+      const step = 274.0; // 260 card width + 14 separator
+
+      if (current + step >= maxScroll + 50) {
+        _scrollController.animateTo(
+          0.0,
+          duration: const Duration(milliseconds: 900),
+          curve: Curves.easeInOutCubic,
+        );
+      } else {
+        _scrollController.animateTo(
+          (current + step).clamp(0.0, maxScroll),
+          duration: const Duration(milliseconds: 700),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
+  }
+
+  void _onUserTouch() {
+    _isUserInteracting = true;
+    _resumeTimer?.cancel();
+    _resumeTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() {
+          _isUserInteracting = false;
+        });
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _autoScrollTimer?.cancel();
+    _resumeTimer?.cancel();
     _pulseController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -46,6 +87,7 @@ class _DhakaNewsTickerState extends State<DhakaNewsTicker>
         _headlines = list;
         _isLoading = false;
       });
+      _startAutoScroll();
     }
   }
 
@@ -180,17 +222,25 @@ class _DhakaNewsTickerState extends State<DhakaNewsTicker>
         else
           SizedBox(
             height: 215,
-            child: ListView.separated(
-              controller: _scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              itemCount: _headlines.length,
-              separatorBuilder: (context, _) => const SizedBox(width: 14),
-              itemBuilder: (context, index) {
-                final item = _headlines[index];
-                return _buildNewsCard(item);
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                if (notification is UserScrollNotification) {
+                  _onUserTouch();
+                }
+                return false;
               },
+              child: ListView.separated(
+                controller: _scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: _headlines.length,
+                separatorBuilder: (context, _) => const SizedBox(width: 14),
+                itemBuilder: (context, index) {
+                  final item = _headlines[index];
+                  return _buildNewsCard(item);
+                },
+              ),
             ),
           ),
       ],

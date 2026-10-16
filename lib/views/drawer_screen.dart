@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project_nutcm_1/pages/profile_page.dart';
-import 'package:flutter_project_nutcm_1/views/dashboard2.dart';
 import 'package:flutter_project_nutcm_1/views/login_screen.dart';
 import 'package:flutter_project_nutcm_1/views/notices.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_project_nutcm_1/controllers/data_controller.dart';
 import 'package:flutter_project_nutcm_1/views/login_user_product_screen.dart';
-import 'package:flutter_project_nutcm_1/data/model/add_date.dart';
 import 'package:flutter_project_nutcm_1/event_calendar.dart';
 import 'package:flutter_project_nutcm_1/views/notes.DART';
 import '../user_list.dart';
 import 'collegesLists.dart';
 import 'employee.DART';
+import 'traffic/dhaka_traffic_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   DataController get controller =>
@@ -129,6 +128,14 @@ class AppDrawer extends StatelessWidget {
                 onTap: () {
                   Get.back();
                   Get.to(() => const collegelists());
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.traffic_rounded, color: Color(0xFFEF4444)),
+                title: const Text('লাইভ ট্রাফিক ও রুট'),
+                onTap: () {
+                  Get.back();
+                  Get.to(() => const DhakaTrafficScreen());
                 },
               ),
               ListTile(

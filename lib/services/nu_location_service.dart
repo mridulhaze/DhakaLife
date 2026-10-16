@@ -251,4 +251,8 @@ class NuLocationService extends GetxService {
           item.cat1Grade1Bill.toString().contains(q);
     }).toList();
   }
+
+  // Backward-compatible aliases for legacy views
+  Future<void> fetchLocations() => fetchLocationsFromFirestore();
+  List<NuLocationItem> search(String query) => searchLocations(query);
 }

@@ -1,269 +1,301 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_project_nutcm_1/controllers/data_controller.dart';
 import 'package:get/get.dart';
+import '../models/nu_location_model.dart';
+import '../services/nu_location_service.dart';
 
 class UserListScreen extends StatefulWidget {
-  // final DataController controller = Get.put(DataController());
-
   const UserListScreen({super.key});
 
   @override
   State<UserListScreen> createState() => _UserListScreenState();
 }
 
-class _UserListScreenState extends State<UserListScreen>
-    with SingleTickerProviderStateMixin {
-  String imageLocation =
-      '"https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0c/a0/70/5f/kantajew-temple-with.jpg?w=1000&h=-1&s=1"';
+class _UserListScreenState extends State<UserListScreen> {
+  final NuLocationService _locationService = NuLocationService.to;
+  final TextEditingController _searchController = TextEditingController();
+  List<NuLocationItem> _filteredLocations = [];
 
-  final List<Map<String, dynamic>> _allUsers = [
-    {
-      "places": "Amtali",
-      "Gazipur_Sadar": "277",
-      "District": "Barguna",
-      "Cat_1_grade_1_bill": "14762",
-      "Cat_1_grade_2_3_bill": "14412",
-      "Cat_1_grade_4_5_bill": "14062",
-      "Cat_2_grade_6_7_bill": "11132",
-      "Cat_2_grade_8_10_bill": "11082"
-    },
-    {
-      "places": "Bamna",
-      "Gazipur_Sadar": "281",
-      "District": "Barguna",
-      "Cat_1_grade_1_bill": "14906",
-      "Cat_1_grade_2_3_bill": "14556",
-      "Cat_1_grade_4_5_bill": "14206",
-      "Cat_2_grade_6_7_bill": "11228",
-      "Cat_2_grade_8_10_bill": "11178"
-    },
-    {
-      "places": "Barguna Sadar",
-      "Gazipur_Sadar": "282",
-      "District": "Barguna",
-      "Cat_1_grade_1_bill": "14942",
-      "Cat_1_grade_2_3_bill": "14592",
-      "Cat_1_grade_4_5_bill": "14242",
-      "Cat_2_grade_6_7_bill": "11252",
-      "Cat_2_grade_8_10_bill": "11202"
-    },
-    {
-      "places": "Betagi",
-      "Gazipur_Sadar": "254",
-      "District": "Barguna",
-      "Cat_1_grade_1_bill": "13934",
-      "Cat_1_grade_2_3_bill": "13584",
-      "Cat_1_grade_4_5_bill": "13234",
-      "Cat_2_grade_6_7_bill": "10580",
-      "Cat_2_grade_8_10_bill": "10530"
-    },
-    {
-      "places": "Patharghata",
-      "Gazipur_Sadar": "307",
-      "District": "Barguna",
-      "Cat_1_grade_1_bill": "15842",
-      "Cat_1_grade_2_3_bill": "15492",
-      "Cat_1_grade_4_5_bill": "15142",
-      "Cat_2_grade_6_7_bill": "11852",
-      "Cat_2_grade_8_10_bill": "11802"
-    },
-    {
-      "places": "Taltali",
-      "Gazipur_Sadar": "299",
-      "District": "Barguna",
-      "Cat_1_grade_1_bill": "15554",
-      "Cat_1_grade_2_3_bill": "15204",
-      "Cat_1_grade_4_5_bill": "14854",
-      "Cat_2_grade_6_7_bill": "11660",
-      "Cat_2_grade_8_10_bill": "11610"
-    },
-  ];
-
-  // This list holds the data for the list view
-  List<Map<String, dynamic>> _foundUsers = [];
-  @override
-  initState() {
-    // at the beginning, all users are shown
-    _foundUsers = _allUsers;
-    super.initState();
-  }
-
-  // This function is called whenever the text field changes
-  void _runFilter(String enteredKeyword) {
-    List<Map<String, dynamic>> results = [];
-    if (enteredKeyword.isEmpty) {
-      // if the search field is empty or only contains white-space, we'll display all users
-      results = _allUsers;
-    } else {
-      results = _allUsers
-          .where((user) =>
-              user["places"]
-                  .toLowerCase()
-                  .contains(enteredKeyword.toLowerCase()) ||
-              user["District"]
-                  .toLowerCase()
-                  .contains(enteredKeyword.toLowerCase()))
-          .toList();
-      // we use the toLowerCase() method to make it case-insensitive
-    }
-
-    // Refresh the UI
-    setState(() {
-      _foundUsers = results;
-    });
-  }
-
-  late AnimationController _controller;
-
-/*
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this);
+    _filteredLocations = _locationService.locations;
+    _locationService.fetchLocations().then((_) {
+      if (mounted) {
+        setState(() {
+          _filteredLocations = _locationService.locations;
+        });
+      }
+    });
   }
-
-  */
 
   @override
   void dispose() {
-    _controller.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  void _runFilter(String query) {
+    if (query.trim().isEmpty) {
+      setState(() {
+        _filteredLocations = _locationService.locations;
+      });
+    } else {
+      setState(() {
+        _filteredLocations = _locationService.search(query);
+      });
+    }
+  }
+
+  void _showLocationDetailsModal(BuildContext context, NuLocationItem item) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE0F2FE),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.location_on, color: Color(0xFF0284C7), size: 24),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.placeName,
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                          ),
+                          Text(
+                            'জেলা: ${item.district}',
+                            style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.directions_car, color: Color(0xFF2563EB), size: 20),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'গাজীপুর সদর থেকে দূরত্ব:',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${item.distanceKm} কিমি',
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF2563EB)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'ভাতা ও ট্যুর বিল স্কেল (জাতীয় বিশ্ববিদ্যালয়)',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+              ),
+              const SizedBox(height: 10),
+              _buildBillRow('ক্যাটাগরি ১ (গ্রেড ১):', '৳ ${item.cat1Grade1Bill}', const Color(0xFFDC2626)),
+              _buildBillRow('ক্যাটাগরি ১ (গ্রেড ২-৩):', '৳ ${item.cat1Grade23Bill}', const Color(0xFFEA580C)),
+              _buildBillRow('ক্যাটাগরি ১ (গ্রেড ৪-৫):', '৳ ${item.cat1Grade45Bill}', const Color(0xFFD97706)),
+              _buildBillRow('ক্যাটাগরি ২ (গ্রেড ৬-৭):', '৳ ${item.cat2Grade67Bill}', const Color(0xFF059669)),
+              _buildBillRow('ক্যাটাগরি ২ (গ্রেড ৮-১০):', '৳ ${item.cat2Grade810Bill}', const Color(0xFF0D9488)),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1E88E5),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('ঠিক আছে', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBillRow(String label, String amount, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 13, color: Color(0xFF334155))),
+          Text(amount, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color)),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        centerTitle: true,
-        title: const Text("Search Locations & Bills"),
+        title: const Text('লোকেশন ও দূরত্ব (Tour Bills)'),
+        elevation: 0.5,
+        backgroundColor: Colors.white,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(10.1),
-        child: Column(
-          children: [
-            TextField(
-              onChanged: (value) => _runFilter(value),
-              decoration: InputDecoration(
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 10.0, horizontal: 15),
-                hintText: "Search",
-                suffixIcon: const Icon(Icons.search),
-                // prefix: Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20.0),
-                  borderSide: const BorderSide(),
+      body: Obx(() {
+        if (_locationService.isLoading.value && _filteredLocations.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        return Padding(
+          padding: const EdgeInsets.all(14.0),
+          child: Column(
+            children: [
+              TextField(
+                controller: _searchController,
+                onChanged: _runFilter,
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16),
+                  hintText: 'স্থান বা জেলা খুঁজুন (যেমন: বরগুনা, আমতলী)...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            _runFilter('');
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16.0),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16.0),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            Expanded(
-              child: _foundUsers.isNotEmpty
-                  ? SingleChildScrollView(
-                      child: ListView.builder(
-                          physics: NeverScrollableScrollPhysics(),
-                          shrinkWrap: true,
-                          itemCount: _foundUsers.length,
-                          itemBuilder: (context, index) => Card(
-                              elevation: 1,
-                              margin: const EdgeInsets.symmetric(vertical: 2),
-                              child: GestureDetector(
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        title: Text('Location : ' +
-                                                _foundUsers[index]['places'] ??
-                                            ''),
-                                        content: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: <Widget>[
-                                            Text('District Name: ' +
-                                                    _foundUsers[index]
-                                                        ['District'] ??
-                                                ''),
-                                            Text('Catagory_1_grade_1_bill: ' +
-                                                    _foundUsers[index][
-                                                        'Catagory_1_grade_1_bill'] ??
-                                                ''),
-                                            Text('Catagory_1_grade_(2-3)_bill: ' +
-                                                    _foundUsers[index][
-                                                        'Catagory_1_grade_(2-3)_bill'] ??
-                                                ''),
-                                            Text('Catagory_1_grade_(4-5)_bill: ' +
-                                                    _foundUsers[index][
-                                                        'Catagory_1_grade_(4-5)_bill'] ??
-                                                ''),
-                                            Text('Catagory_2_grade_(6-7)_bill: ' +
-                                                    _foundUsers[index][
-                                                        'Catagory_2_grade_(6-7)_bill'] ??
-                                                ''),
-                                            Text('Catagory_2_grade_(8-10)_bill: ' +
-                                                    _foundUsers[index][
-                                                        'Catagory_2_grade_(8-10)_bill'] ??
-                                                ''),
-                                            /*   Text('Catagory_3_grade_(11-13)_bill: ' +
-                                                    _foundUsers[index][
-                                                        'Catagory_3_grade_(11-13)_bill'] ??
-                                                ''),
-                                            Text('Catagory_3_grade_(14-16)_bill: ' +
-                                                    _foundUsers[index][
-                                                        'Catagory_3_grade_(14-16)_bill'] ??
-                                                ''),
-                                            Text('Catagory_4_grade_(17-20)_bill: ' +
-                                                    _foundUsers[index][
-                                                        'Catagory_4_grade_(17-20)_bill'] ??
-                                                ''), */
-                                            SizedBox(
-                                                height: 10), // add some spacing
-                                            Text('Distance From Gazipur: ' +
-                                                    _foundUsers[index]
-                                                        ['Gazipur_Sadar'] ??
-                                                ''),
-                                          ],
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            child: Text('Close'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-                                },
-                                child: Card(
-                                  elevation: 1,
-                                  margin:
-                                      const EdgeInsets.symmetric(vertical: 2),
-                                  child: ListTile(
-                                    leading: CircleAvatar(
-                                      radius: 30.0,
-                                      backgroundImage: NetworkImage(
-                                          /*_foundUsers[index]['image'] */
-                                          (imageLocation)),
-                                      backgroundColor: Colors.transparent,
-                                    ),
-                                    title: Text(_foundUsers[index]['places']),
-                                    subtitle: Text(
-                                        '${_foundUsers[index]["District"]}'),
-                                  ),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'মোট স্থান: ${_filteredLocations.length} টি',
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF475569), fontSize: 13),
+                  ),
+                  const Text(
+                    'ক্লিক করে বিল বিস্তারিত দেখুন',
+                    style: TextStyle(color: Color(0xFF64748B), fontSize: 11),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: _filteredLocations.isNotEmpty
+                    ? ListView.separated(
+                        itemCount: _filteredLocations.length,
+                        separatorBuilder: (context, _) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          final item = _filteredLocations[index];
+                          return Card(
+                            elevation: 0.5,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              side: const BorderSide(color: Color(0xFFE2E8F0)),
+                            ),
+                            child: ListTile(
+                              onTap: () => _showLocationDetailsModal(context, item),
+                              leading: Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEEF2FF),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                              ))))
-                  : const Text(
-                      'No results found Please try with diffrent search',
-                      style: TextStyle(fontSize: 24),
-                    ),
-            ),
-          ],
-        ),
-      ),
+                                child: const Center(
+                                  child: Icon(Icons.location_on, color: Color(0xFF4F46E5), size: 22),
+                                ),
+                              ),
+                              title: Text(
+                                item.placeName,
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF0F172A)),
+                              ),
+                              subtitle: Text(
+                                'জেলা: ${item.district} • দূরত্ব: ${item.distanceKm} কিমি',
+                                style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                              ),
+                              trailing: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFECFDF5),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '৳${item.cat1Grade1Bill}',
+                                  style: const TextStyle(color: Color(0xFF059669), fontWeight: FontWeight.bold, fontSize: 12),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    : Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.location_off, size: 48, color: Color(0xFF94A3B8)),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'কোনো ফলাফল পাওয়া যায়নি',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF334155)),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              '"${_searchController.text}" সম্পর্কিত কোনো তথ্য নেই।',
+                              style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+              ),
+            ],
+          ),
+        );
+      }),
     );
   }
 }

@@ -25,6 +25,13 @@ class NuLocationItem {
     this.imageUrl,
   });
 
+  String get placeName => places;
+  int get distanceKm => gazipurSadarKm;
+  int get cat1Grade23Bill => cat1Grade2To3Bill;
+  int get cat1Grade45Bill => cat1Grade4To5Bill;
+  int get cat2Grade67Bill => cat2Grade6To7Bill;
+  int get cat2Grade810Bill => cat2Grade8To10Bill;
+
   static int _parseInt(dynamic val, [int fallback = 0]) {
     if (val == null) return fallback;
     if (val is int) return val;
